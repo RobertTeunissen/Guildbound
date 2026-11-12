@@ -22,6 +22,7 @@ var screen := "roster"
 var comparison := ""
 var expanded_scores := {}
 var save_failed := false
+var save_path := GuildSave.PATH
 var serif := SystemFont.new()
 var shell: HBoxContainer
 var scroll: ScrollContainer
@@ -30,7 +31,7 @@ var scroll: ScrollContainer
 func _ready() -> void:
 	serif.font_names = PackedStringArray(["Baskerville", "Palatino Linotype", "Liberation Serif", "Georgia"])
 	get_window().min_size = Vector2i(1024, 680)
-	state = GuildSave.read(rules)
+	state = GuildSave.read(rules, save_path)
 	if not rules.debrief(state).is_empty():
 		screen = "journal"
 	elif not state.expedition.is_empty():
@@ -264,7 +265,7 @@ func _journal(parent: VBoxContainer, aside: VBoxContainer, result: Dictionary) -
 		_heading(parent, "Guild journal", "Expedition records", "Completed contracts and their consequences appear here.")
 		var empty := _panel(parent)
 		_text(empty, "No expeditions recorded", 24, INK, true)
-		var departed := not state.expedition.is_empty()
+		var departed: bool = not state.expedition.is_empty()
 		_button(empty, "Return to the contract" if departed else "Return to the roster", _navigate.bind("contract" if departed else "roster"))
 		return
 	_heading(parent, "Guild journal", "Expedition debrief", rules.scenario.contract.title + " · Ashford Crossing")
@@ -379,7 +380,7 @@ func _reset() -> void:
 
 
 func _save_and_render(preserve_scroll := true) -> void:
-	save_failed = GuildSave.write(state) != OK
+	save_failed = GuildSave.write(state, save_path) != OK
 	_render(preserve_scroll)
 
 

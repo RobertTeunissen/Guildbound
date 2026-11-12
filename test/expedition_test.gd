@@ -2,15 +2,21 @@ extends SceneTree
 
 const Expedition = preload("res://scripts/expedition.gd")
 const GuildSave = preload("res://scripts/guild_save.gd")
+const Guildhall = preload("res://scenes/guildhall.tscn")
 
 var rules := Expedition.new()
 var failures := 0
 
 
 func _initialize() -> void:
+	_run.call_deferred()
+
+
+func _run() -> void:
 	_test_lineup()
 	_test_outcomes()
 	_test_save()
+	_test_guildhall()
 	if failures == 0:
 		print("Expedition tests passed.")
 	quit(0 if failures == 0 else 1)
@@ -71,6 +77,41 @@ func _lineup(third: String) -> Dictionary:
 	var state := rules.fresh()
 	rules.toggle_member(state, third)
 	return state
+
+
+func _test_guildhall() -> void:
+	var path := "user://test-guildhall-%d.cfg" % OS.get_process_id()
+	var guildhall := Guildhall.instantiate()
+	guildhall.set("save_path", path)
+	root.add_child(guildhall)
+	_press(guildhall, "Add Tess Reed to the party", true)
+	_press(guildhall, "Depart for Ashford")
+	_expect(guildhall.get("screen") == "contract", "Departing opens the Scout’s report.")
+	_press(guildhall, "Follow the Warden’s orders")
+	_expect(guildhall.get("screen") == "journal", "Choosing an order opens the expedition debrief.")
+	_press(guildhall, "Evacuate the mill first")
+	_expect(guildhall.get("comparison") == "rescue", "The journal can compare another order.")
+	var saved := GuildSave.read(rules, path)
+	_expect(saved.expedition.get("choice") == "orders", "Comparing an order leaves the saved decision intact.")
+	guildhall.free()
+	var reopened := Guildhall.instantiate()
+	reopened.set("save_path", path)
+	root.add_child(reopened)
+	_expect(reopened.get("screen") == "journal", "Reopening the game returns to the saved debrief.")
+	reopened.free()
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
+
+
+func _press(screen: Node, label: String, by_tooltip := false) -> void:
+	for node: Node in screen.find_children("*", "Button", true, false):
+		var button := node as Button
+		var text := button.tooltip_text if by_tooltip else button.text
+		if text.begins_with(label):
+			_expect(not button.disabled, "The button is enabled: " + label)
+			if not button.disabled:
+				button.pressed.emit()
+			return
+	_expect(false, "The screen has the button: " + label)
 
 
 func _expect(condition: bool, failure: String) -> void:
