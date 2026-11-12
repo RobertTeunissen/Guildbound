@@ -1,7 +1,19 @@
 {
   "region": "The Alder Vale",
-  "setting": "Alderford is a small river town where the Alder Company keeps its guildhall. Barges, millers and grain convoys depend on the alder roads and the old network of locks. The wardens patrol the roads, but isolated settlements hire adventurers when they run out of hands. The Copper Lanterns and the Briar Company take the same local work. Low magic is familiar; old machinery and ruins still surprise people.",
+  "setting": "Alderford is a small river town where the player’s guild keeps its guildhall. Barges, millers and grain convoys depend on the alder roads and the old network of locks. The wardens patrol the roads, but isolated settlements hire adventurers when they run out of hands. The Copper Lanterns and the Briar Company take the same local work. Low magic is familiar; old machinery and ruins still surprise people.",
   "sites": [
+    {
+      "id": "alderford", "name": "Alderford", "map": [0.44, 0.45], "travel": 0,
+      "patron": "Reeve Ada Fen", "affiliation": "Alderford Council",
+      "lore": "The market square, old quays, guildhall and relief house sit inside the town walls.",
+      "jobs": [
+        ["The Night Market", "Find out who has been moving the market stalls after curfew."],
+        ["The Quay Crane", "Free a cargo sling trapped under the town quay crane."],
+        ["The Baker’s Seal", "Trace counterfeit flour seals through the market before the morning auctions."],
+        ["The Well Under the Steps", "Investigate why the well beneath the guildhall stairs has suddenly run cloudy."]
+      ],
+      "complications": ["Several stallholders are willing to help if the party works before the crowd arrives.", "The old drain gives a way under the lane, but the flow changes with the tide.", "Two witnesses agree on the time and disagree on everything else.", "The watch can spare a runner for one shift, and the next bell is close."]
+    },
     {
       "id": "north_road", "name": "North Road", "map": [0.31, 0.19], "travel": 2,
       "patron": "Captain Nessa Bracken", "affiliation": "Alder Road Watch",

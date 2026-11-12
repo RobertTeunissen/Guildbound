@@ -1,0 +1,205 @@
+{
+  "dagger": {
+    "name": "Dagger",
+    "slot": "weapon",
+    "price": 2,
+    "description": "Light finesse blade.",
+    "category": "simple",
+    "damage": "1d4",
+    "damage_type": "piercing",
+    "finesse": true
+  },
+  "quarterstaff": {
+    "name": "Quarterstaff",
+    "slot": "weapon",
+    "price": 2,
+    "description": "A walking staff and simple bludgeon.",
+    "category": "simple",
+    "damage": "1d6",
+    "versatile": "1d8",
+    "damage_type": "bludgeoning"
+  },
+  "mace": {
+    "name": "Mace",
+    "slot": "weapon",
+    "price": 5,
+    "description": "A simple one-handed weapon.",
+    "category": "simple",
+    "damage": "1d6",
+    "damage_type": "bludgeoning"
+  },
+  "spear": {
+    "name": "Spear",
+    "slot": "weapon",
+    "price": 4,
+    "description": "A short spear with an ash shaft.",
+    "category": "simple",
+    "damage": "1d6",
+    "versatile": "1d8",
+    "damage_type": "piercing"
+  },
+  "shortbow": {
+    "name": "Shortbow",
+    "slot": "weapon",
+    "price": 25,
+    "description": "A simple ranged weapon. Requires two hands.",
+    "category": "simple",
+    "damage": "1d6",
+    "damage_type": "piercing",
+    "ranged": true,
+    "two_handed": true
+  },
+  "longbow": {
+    "name": "Longbow",
+    "slot": "weapon",
+    "price": 50,
+    "description": "A martial ranged weapon. Requires two hands.",
+    "category": "martial",
+    "damage": "1d8",
+    "damage_type": "piercing",
+    "ranged": true,
+    "two_handed": true
+  },
+  "longsword": {
+    "name": "Longsword",
+    "slot": "weapon",
+    "price": 15,
+    "description": "A versatile martial sword.",
+    "category": "martial",
+    "damage": "1d8",
+    "versatile": "1d10",
+    "damage_type": "slashing"
+  },
+  "rapier": {
+    "name": "Rapier",
+    "slot": "weapon",
+    "price": 25,
+    "description": "A martial finesse blade.",
+    "category": "martial",
+    "damage": "1d8",
+    "damage_type": "piercing",
+    "finesse": true
+  },
+  "greatsword": {
+    "name": "Greatsword",
+    "slot": "weapon",
+    "price": 50,
+    "description": "A heavy martial weapon. Requires two hands.",
+    "category": "martial",
+    "damage": "2d6",
+    "damage_type": "slashing",
+    "two_handed": true
+  },
+  "lockwarden_blade": {
+    "name": "Lockwarden’s Blade",
+    "slot": "weapon",
+    "price": 80,
+    "description": "A recovered magical longsword with a +1 attack and damage bonus.",
+    "category": "martial",
+    "damage": "1d8",
+    "versatile": "1d10",
+    "damage_type": "slashing",
+    "magic": 1,
+    "reward_only": true
+  },
+  "leather": {
+    "name": "Leather armor",
+    "slot": "armor",
+    "price": 10,
+    "description": "Light armor. AC 11 + Dexterity modifier.",
+    "category": "light",
+    "ac": 11
+  },
+  "studded_leather": {
+    "name": "Studded leather",
+    "slot": "armor",
+    "price": 45,
+    "description": "Light armor. AC 12 + Dexterity modifier.",
+    "category": "light",
+    "ac": 12
+  },
+  "chain_shirt": {
+    "name": "Chain shirt",
+    "slot": "armor",
+    "price": 50,
+    "description": "Medium armor. AC 13 + Dexterity modifier, up to +2.",
+    "category": "medium",
+    "ac": 13
+  },
+  "scale_mail": {
+    "name": "Scale mail",
+    "slot": "armor",
+    "price": 50,
+    "description": "Medium armor. AC 14 + Dexterity modifier, up to +2. Stealth disadvantage.",
+    "category": "medium",
+    "ac": 14,
+    "noisy": true
+  },
+  "chain_mail": {
+    "name": "Chain mail",
+    "slot": "armor",
+    "price": 75,
+    "description": "Heavy armor. AC 16. Stealth disadvantage.",
+    "category": "heavy",
+    "ac": 16,
+    "noisy": true,
+    "strength": 13
+  },
+  "shield": {
+    "name": "Shield",
+    "slot": "offhand",
+    "price": 10,
+    "description": "Adds +2 AC. Requires a free hand.",
+    "category": "shield",
+    "ac": 2
+  },
+  "arcane_focus": {
+    "name": "Arcane focus",
+    "slot": "kit",
+    "price": 10,
+    "description": "A focus for wizard spellcasting. +1 Intelligence on expedition checks.",
+    "check": "int",
+    "bonus": 1
+  },
+  "holy_symbol": {
+    "name": "Holy symbol",
+    "slot": "kit",
+    "price": 5,
+    "description": "A focus for divine spellcasting. +1 Wisdom on expedition checks.",
+    "check": "wis",
+    "bonus": 1
+  },
+  "trail_map": {
+    "name": "Trail map",
+    "slot": "kit",
+    "price": 8,
+    "description": "A survey of tracks and waterways. +1 Wisdom on expedition checks.",
+    "check": "wis",
+    "bonus": 1
+  },
+  "climbers_kit": {
+    "name": "Climber’s kit",
+    "slot": "kit",
+    "price": 25,
+    "description": "Rope, harness, and pitons. +1 Strength on expedition checks.",
+    "check": "str",
+    "bonus": 1
+  },
+  "thieves_tools": {
+    "name": "Thieves’ tools",
+    "slot": "kit",
+    "price": 25,
+    "description": "Picks, files, and fine probes. +1 Dexterity on expedition checks.",
+    "check": "dex",
+    "bonus": 1
+  },
+  "envoy_badge": {
+    "name": "Envoy’s badge",
+    "slot": "kit",
+    "price": 40,
+    "description": "A sign of trust from the Alderford council. +2 Charisma on expedition checks.",
+    "check": "cha",
+    "bonus": 2,
+    "reward_only": true
+  }
+}

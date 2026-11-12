@@ -19,8 +19,11 @@ func _run() -> void:
 	_test_outcomes()
 	_test_save()
 	_test_campaign()
+	_test_town_and_questlines()
+	_test_armory_and_recruitment()
+	_test_previous_campaign()
 	_test_writer()
-	_test_guildhall()
+	await _test_guildhall()
 	if failures == 0:
 		print("Expedition tests passed.")
 	quit(0 if failures == 0 else 1)
@@ -85,16 +88,17 @@ func _lineup(third: String) -> Dictionary:
 
 func _test_campaign() -> void:
 	var campaign := Campaign.new()
-	var state := campaign.fresh()
+	var state := _chartered(campaign)
 	campaign.open_session(state)
 	var initial_offers: Array = state.offers.duplicate(true)
-	_expect(state.offers.size() == 3, "The map has three offers at launch.")
+	_expect(state.offers.size() == 5, "The map has three standalone offers and two story openings at launch.")
 	_expect(not campaign.advance_day(state) and state.day == 1, "A paused calendar does not tick.")
 	campaign.open_session(state)
 	for offer: Dictionary in state.offers:
 		for old: Dictionary in initial_offers:
-			_expect(offer.id != old.id and offer.title != old.title, "Reopening the map offers different quests.")
+			_expect(offer.id != old.id and (offer.has("line") or offer.title != old.title), "Reopening the map offers different quests.")
 	var quest: Dictionary = state.offers[0]
+	campaign.toggle_member(state, "tess")
 	_expect(not campaign.accept(state, quest.id, 20), "A quest needs a full party.")
 	campaign.toggle_member(state, "tess")
 	var plans := quest.responses as Array
@@ -135,9 +139,115 @@ func _test_campaign() -> void:
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
 
 
+func _chartered(campaign: Campaign) -> Dictionary:
+	var state := campaign.fresh()
+	var charter := {"name": "The Third Lock", "motto": "Stand together", "terms": "Bring the party home."}
+	_expect(not campaign.found_guild(state, charter, ["mara", "mara", "tess"]), "Founders must be distinct.")
+	_expect(campaign.found_guild(state, charter, ["mara", "rowan", "tess"]), "Signing a valid charter starts the campaign.")
+	return state
+
+
+func _test_town_and_questlines() -> void:
+	var campaign := Campaign.new()
+	var state := _chartered(campaign)
+	var start := _line_offer(state, "ledger")
+	_expect(start.travel == 0 and start.patron == "", "The quest line starts in Alderford as an independent lead.")
+	_expect(campaign.accept(state, start.id, 1) and state.expedition.phase == "decision", "Town quests open at the site with no travel.")
+	_expect(not campaign.unequip(state, "tess", "weapon"), "The active party's equipment is locked.")
+	_expect(campaign.choose_plan(state, "first"), "The party can act on the town lead.")
+	_tick(campaign, state, start.work)
+	_expect(state.day == 2 and state.expedition.is_empty(), "The town quest advances only its work days.")
+	_expect(state.questlines.ledger.step == 0 and _line_offer(state, "ledger").is_empty(), "Failure leaves the chapter open for a future retry.")
+	_tick(campaign, state, 1)
+	start = _line_offer(state, "ledger")
+	_expect(not start.is_empty(), "A failed chapter returns to the board.")
+	campaign.accept(state, start.id, 20)
+	campaign.choose_plan(state, "first")
+	_tick(campaign, state, start.work)
+	_expect(state.questlines.ledger.step == 1 and state.patron_standings.is_empty(), "An independent lead unlocks its next chapter without paying patron standing.")
+	_expect(state.stash.get(start.loot, 0) == 1 and state.treasury == 120, "An independent lead yields loot without a patron payment.")
+	var follow_up := _line_offer(state, "ledger")
+	_expect(follow_up.site == "rookbridge" and follow_up.patron != "", "The follow-up leads to Rookbridge and a patron.")
+	_expect(campaign.accept(state, follow_up.id, 20), "The party can accept the second chapter.")
+	_tick(campaign, state, follow_up.travel)
+	campaign.choose_plan(state, "first")
+	_tick(campaign, state, follow_up.work + follow_up.travel)
+	_expect(state.patron_standings.get(follow_up.patron, 0) > 0 and state.patron_standings.size() == 1, "Commission success changes the issuing patron's standing.")
+	_expect(campaign.characters.level(state.character_progress.tess.xp) == 2, "Accumulated expedition XP advances the adventurer's level.")
+	_expect(state.journal[0].rewards.levels.get("tess") == 2 and _line_offer(state, "ledger").chapter == 2, "The journal records a level-up and the quest line advances.")
+	var historic := campaign.debrief(state.journal[0].run)
+	campaign.unequip(state, "tess", "kit")
+	_expect(campaign.debrief(state.journal[0].run) == historic, "Later gear changes preserve the original debrief.")
+	var finale := _line_offer(state, "ledger")
+	_expect(campaign.accept(state, finale.id, 20), "The party can accept the final chapter.")
+	_tick(campaign, state, finale.travel)
+	campaign.choose_plan(state, "first")
+	_tick(campaign, state, finale.work + finale.travel)
+	_expect(state.questlines.ledger.step == 3 and state.stash.lockwarden_blade == 1, "Finishing the quest line awards its unique equipment.")
+	campaign.open_session(state)
+	_expect(_line_offer(state, "ledger").is_empty(), "A completed story stays completed after reopening.")
+
+
+func _line_offer(state: Dictionary, id: String) -> Dictionary:
+	for offer: Dictionary in state.offers:
+		if offer.get("line") == id:
+			return offer
+	return {}
+
+
+func _tick(campaign: Campaign, state: Dictionary, days: int) -> void:
+	state.paused = false
+	for day in days:
+		campaign.advance_day(state)
+
+
+func _test_armory_and_recruitment() -> void:
+	var campaign := Campaign.new()
+	var state := _chartered(campaign)
+	var progress: Dictionary = state.character_progress.mara
+	var sheet := campaign.characters.sheet(campaign.members.mara, progress)
+	_expect(sheet.hp == 28 and sheet.ac == 18 and sheet.proficiency == 2, "Paladin sheet calculates hit points, armor and proficiency.")
+	_expect(campaign.buy(state, "greatsword") and state.treasury == 70, "Purchases spend guild gold and enter the stash.")
+	_expect(not campaign.equip(state, "mara", "greatsword") and state.stash.greatsword == 1, "A shield blocks a two-handed weapon without changing inventory.")
+	_expect(campaign.unequip(state, "mara", "offhand") and campaign.equip(state, "mara", "greatsword"), "Returning the shield to the stash allows the new weapon.")
+	_expect(state.stash.longsword == 1 and not state.stash.has("greatsword"), "The replaced weapon returns to the stash.")
+	_expect(campaign.sell(state, "longsword") and state.treasury == 77, "The shop buys a stashed item at resale price.")
+	_expect(not campaign.buy(state, "lockwarden_blade"), "Quest rewards are unavailable at the shop.")
+	progress.xp = 2700
+	_expect(campaign.improve(state, "mara", "str") and campaign.improve(state, "mara", "str") and not campaign.improve(state, "mara", "str"), "Level four grants two assignable ability points.")
+	_expect(campaign.characters.ability_score(campaign.members.mara, progress, "str") == 18, "Ability improvements affect the character sheet.")
+	_expect(campaign.start_scouting(state, "rowan") and not campaign.can_leave(state), "A scouting party member is unavailable for expeditions.")
+	_tick(campaign, state, Campaign.SCOUT_DAYS)
+	_expect(state.candidates.size() == 2 and campaign.can_leave(state), "A skilled Scout returns with two candidates.")
+	var id: String = state.candidates[0]
+	var before: int = state.treasury
+	_expect(campaign.hire(state, id) and state.guild_roster.has(id) and state.character_progress.has(id), "Hiring adds the candidate and starting equipment to the roster.")
+	_expect(state.treasury == before - campaign.recruit_fee(id) and not campaign.hire(state, id), "Recruit fees are charged once.")
+	var path := "user://test-progression-%d.cfg" % OS.get_process_id()
+	_expect(GuildSave.write(state, path) == OK and GuildSave.read(campaign, path) == state, "The charter, roster, scouting and inventory survive saving.")
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
+
+
+func _test_previous_campaign() -> void:
+	var campaign := Campaign.new()
+	var previous := _lineup("tess")
+	previous.version = 2
+	previous.treasury = 210
+	rules.depart(previous, 6)
+	rules.record(previous, "orders")
+	previous.journal = [{"day": 7, "run": previous.duplicate(true)}]
+	previous.expedition = {}
+	previous.day = 7
+	var migrated := campaign.restore(previous)
+	campaign.open_session(migrated)
+	_expect(migrated.day == 7 and migrated.treasury == 210 and migrated.chartered, "Version two saves reopen on the same day with their treasury.")
+	_expect(migrated.party == ["mara", "rowan", "tess"] and migrated.guild_roster.size() == 6, "The previous roster and expedition lineup carry forward.")
+	_expect(campaign.debrief(migrated.journal[0].run).gold == 90 and migrated.patron_standings["Warden Elspeth Vale"] == 2, "Journal outcomes stay intact and initialize individual patron standings.")
+
+
 func _test_writer() -> void:
 	var campaign := Campaign.new()
-	var state := campaign.fresh()
+	var state := _chartered(campaign)
 	campaign.open_session(state)
 	var offer: Dictionary = state.offers[0]
 	var story := {
@@ -173,12 +283,31 @@ func _test_guildhall() -> void:
 	guildhall.set("save_path", path)
 	guildhall.set("use_local_ai", false)
 	root.add_child(guildhall)
+	_expect(guildhall.get("screen") == "founding", "A new campaign opens the founding charter.")
+	_press(guildhall, "Select Mara")
+	_press(guildhall, "Select Rowan")
+	_press(guildhall, "Select Tess")
+	_press(guildhall, "Sign charter and begin")
 	var state: Dictionary = guildhall.get("state")
 	var offer: Dictionary = state.offers[0]
+	_press(guildhall, "Roster")
+	_press(guildhall, "Character sheet")
+	_expect(guildhall.get("screen") == "character", "The roster opens a character sheet.")
+	_press(guildhall, "Open armory")
+	_press(guildhall, "Town shop")
+	_expect(guildhall.get("screen") == "armory", "The character sheet leads to the shop.")
+	_press(guildhall, "Quest map")
+	await process_frame
+	await process_frame
+	_press(guildhall, "Zoom in", true)
+	_expect(guildhall.get("map_zoom") > 1.0, "The map zoom button changes the camera.")
+	_press(guildhall, "Alderford")
+	_expect(guildhall.get("selected_site") == "alderford" and guildhall.get("map_zoom") > 1.0, "The town marker opens its quests and preserves zoom.")
+	await process_frame
+	await process_frame
+	_press(guildhall, "Reset view")
+	_expect(guildhall.get("map_zoom") == 1.0, "Reset view restores the default zoom.")
 	_press(guildhall, offer.location)
-	_press(guildhall, "Assemble the party")
-	_press(guildhall, "Add Tess Reed to the party", true)
-	_press(guildhall, "View the quest map")
 	_press(guildhall, "Accept and depart")
 	_expect(guildhall.get("screen") == "contract", "Accepting a map offer opens the expedition.")
 	_press(guildhall, "Resume")

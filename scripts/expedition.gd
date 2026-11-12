@@ -173,10 +173,14 @@ func check_plan(state: Dictionary, order: Dictionary) -> Dictionary:
 	for role: Array in roles:
 		var member: Dictionary = members[role[1]]
 		var ability: String = role[2]
-		var modifier := floori((float(member.scores[ability]) - 10.0) / 2.0)
+		var modifier := _ability_modifier(state, member, ability)
 		contributions.append({"role": role[0], "name": member.name, "ability": ability, "modifier": modifier})
 		bonus += modifier
 	return {"contributions": contributions, "chemistry": bond_bonus, "bonus": bonus, "dc": int(order.dc)}
+
+
+func _ability_modifier(_state: Dictionary, member: Dictionary, ability: String) -> int:
+	return floori((float(member.scores[ability]) - 10.0) / 2.0)
 
 
 func success_chance(state: Dictionary, order: Dictionary) -> int:

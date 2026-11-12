@@ -1,0 +1,68 @@
+[
+  {
+    "id": "ledger",
+    "title": "The Drowned Ledger",
+    "chapters": [
+      {
+        "title": "Ink on the Quay", "site": "alderford", "commission": false, "work": 1, "dc": 13, "fee": 0, "xp": 220, "loot": "trail_map",
+        "brief": "Dockhands found a torn cargo receipt sewn into a floating coat. The cargo marks are Alderford’s, but nobody at the quay remembers unloading it.",
+        "report": "The coat came from a night ferry. Its crew won’t name the passenger until the guild finds out who paid to erase the ferry’s entry from the quay book.",
+        "plans": [
+          ["Trace the ferry payment", "Compare the quay accounts with the ferryman’s receipts.", "int", "wis", "int", "The payment leads to an off-book cage at Rookbridge. The ferryman gives the party his marked river survey.", "The bookkeeper pulls the receipts before the ferry payment can be traced."],
+          ["Bring the dockhands together", "Talk the witnesses through the night’s movements, then have the scout verify their account.", "cha", "wis", "int", "The witnesses name the lock cage at Rookbridge and mark the approach on an old river survey.", "The witnesses agree on the ferry and scatter before naming the payer."]
+        ]
+      },
+      {
+        "title": "Under the Third Lock", "site": "rookbridge", "commission": true, "work": 2, "dc": 16, "fee": 90, "xp": 370, "loot": "climbers_kit",
+        "brief": "The quay receipt points to the third lock at Rookbridge. Lockkeeper Bram Holt hires the guild to open a cage hidden below it before the water rises.",
+        "report": "The cage contains a half-submerged ledger and broken council seals. The old inspection stair is buckling, and someone has tied a warning bell to the gate.",
+        "plans": [
+          ["Brace the inspection stair", "Secure a descent before the water lifts the cage.", "str", "dex", "con", "The ledger comes up intact. It lists payments to divert the east-bank grain barges at Ashford.", "The stair gives way and the cage sinks deeper before it can be opened."],
+          ["Work through the inspection slot", "Use the lock drawings to lift the ledger without opening the gate.", "int", "dex", "wis", "The scout fishes the book through the slot. Its final entries name Ashford’s east bank.", "The hook tears the cover free while the pages remain trapped under the cage."]
+        ]
+      },
+      {
+        "title": "The East-Bank Reckoning", "site": "ashford", "commission": true, "work": 2, "dc": 18, "fee": 120, "xp": 560, "loot": "lockwarden_blade",
+        "brief": "The recovered ledger gives Warden Elspeth Vale proof that relief grain is being sold out of an Ashford storehouse. She asks the guild to recover it before the buyers arrive.",
+        "report": "The grain is already loaded on two barges. A third is blocking the sluice, where the foreman insists he was acting under council orders.",
+        "plans": [
+          ["Present the ledger to the crews", "Get the bargemasters to see the duplicate seals before they cast off.", "cha", "wis", "int", "The bargemasters turn the relief grain over to the Warden. The Warden awards the guild the old Lockwarden’s Blade.", "The foreman buys enough time to move the grain beyond the sluice."],
+          ["Secure the sluice and unload", "Keep the barges in place while the crews bring the sacks ashore.", "str", "dex", "con", "The party recovers the grain before the barges can leave. The Warden awards the guild the old Lockwarden’s Blade.", "A towline breaks and the loaded barges clear the crossing."]
+        ]
+      }
+    ]
+  },
+  {
+    "id": "bell",
+    "title": "The Bell Below",
+    "chapters": [
+      {
+        "title": "The Midnight Bell", "site": "alderford", "commission": false, "work": 1, "dc": 12, "fee": 0, "xp": 200, "loot": "thieves_tools",
+        "brief": "A sound like a drowned bell is keeping the market quarter awake. The tower keeper swears the town’s bells were roped up days ago.",
+        "report": "The sound is loudest under a baker’s shop. Behind a bricked-up drain, the guild finds marks that match the old South Wall watch plan.",
+        "plans": [
+          ["Map the buried drain", "Compare the sound in adjoining cellars and trace its path.", "int", "wis", "int", "The marks trace the sound to a guard tunnel below the South Wall. The baker turns over an old lockpick roll found behind the bricks.", "High water obscures the marks before a reliable route can be found."],
+          ["Follow the sound after midnight", "Move through the cellars as the bell rings and mark each opening.", "wis", "dex", "con", "The party identifies a South Wall guard tunnel at the end of the drain and finds an old lockpick roll in its mouth.", "The bell stops while the party is still trying to identify the right branch."]
+        ]
+      },
+      {
+        "title": "A Door in the Earthworks", "site": "south_wall", "commission": true, "work": 2, "dc": 15, "fee": 75, "xp": 340, "loot": "chain_shirt",
+        "brief": "Sister Anwen hires the guild to reopen the guard tunnel identified beneath Alderford. The relief house is worried the subsidence will reach its stores.",
+        "report": "The bell is a warning weight connected to a flood grate. An old watch record identifies the handwheel for the grate in a pump room beneath the town square.",
+        "plans": [
+          ["Survey the warning mechanism", "Copy the watch plans and identify the pump room’s original entry.", "int", "wis", "dex", "The plan identifies the square’s buried pump room. The relief house gives the guild a chain shirt recovered from the watch tunnel.", "The tunnel shudders and the party retreats before copying the watch plans."],
+          ["Clear the relief passage", "Shore the tunnel and help the relief workers carry out the watch record.", "str", "wis", "con", "The record survives the move, with directions to the pump room. Anwen gives the guild a recovered chain shirt.", "A settling lintel cuts off the record shelf until the passage can be shored."]
+        ]
+      },
+      {
+        "title": "The Wheel Under the Square", "site": "alderford", "commission": true, "work": 2, "dc": 17, "fee": 100, "xp": 510, "loot": "envoy_badge",
+        "brief": "The old watch record shows how to silence the flood bell and reopen the square’s drain. Reeve Ada Fen hires the guild to reach the pump room.",
+        "report": "The wheel still turns, but two sluice teeth have broken. The square can be kept dry by bracing the wheel or routing the water through the disused north grate.",
+        "plans": [
+          ["Brace the wheel", "Hold the failing axle steady while the gate crew fits new stops.", "str", "dex", "con", "The guild stops the flooding and returns the square to use. Ada gives the party an Envoy’s badge.", "The axle slips. The market is evacuated while the crew installs a new brace."],
+          ["Divert through the north grate", "Follow the old diagram to open the relief grate in the right order.", "int", "wis", "dex", "The relief grate takes the flow and the bell finally falls silent. Ada gives the guild an Envoy’s badge.", "A blocked relief channel forces the party to shut the grate and try again."]
+        ]
+      }
+    ]
+  }
+]
