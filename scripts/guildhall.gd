@@ -1,7 +1,10 @@
 extends Control
 
-const Expedition = preload("res://scripts/expedition.gd")
+const Campaign = preload("res://scripts/campaign.gd")
 const GuildSave = preload("res://scripts/guild_save.gd")
+const QuestWriter = preload("res://scripts/quest_writer.gd")
+const RegionMap = preload("res://scripts/region_map.gd")
+const ManagementView = preload("res://scripts/management_view.gd")
 const CANVAS := Color("#171814")
 const RAIL := Color("#11120f")
 const SURFACE := Color("#22231c")
@@ -16,27 +19,54 @@ const CLASS_COLORS := {
 	"plum": Color("#e2b6c6"), "teal": Color("#a9cfbf"), "ochre": Color("#e5c083"),
 }
 
-var rules := Expedition.new()
+var rules := Campaign.new()
+var management := ManagementView.new(self, rules)
 var state: Dictionary
-var screen := "roster"
+var screen := "map"
+var selected_quest := ""
+var selected_site := ""
+var map_zoom := 1.0
+var map_focus := Vector2(0.5, 0.5)
+var inspected := {}
+var requested := {}
+var journal_index := 0
 var comparison := ""
-var expanded_scores := {}
 var save_failed := false
 var save_path := GuildSave.PATH
 var serif := SystemFont.new()
 var shell: HBoxContainer
 var scroll: ScrollContainer
+var clock := Timer.new()
+var writer := QuestWriter.new()
+var use_local_ai := true
 
 
 func _ready() -> void:
 	serif.font_names = PackedStringArray(["Baskerville", "Palatino Linotype", "Liberation Serif", "Georgia"])
 	get_window().min_size = Vector2i(1024, 680)
 	state = GuildSave.read(rules, save_path)
-	if not rules.debrief(state).is_empty():
-		screen = "journal"
+	var legacy_debrief: bool = state.expedition.has("choice") and not state.expedition.has("quest") and state.expedition.choice != ""
+	rules.open_session(state)
+	if not state.chartered:
+		screen = "founding"
 	elif not state.expedition.is_empty():
 		screen = "contract"
-	_render()
+	elif legacy_debrief:
+		screen = "journal"
+	clock.wait_time = Campaign.DAY_SECONDS
+	clock.timeout.connect(_day_passed)
+	add_child(clock)
+	clock.start()
+	clock.paused = true
+	add_child(writer)
+	use_local_ai = use_local_ai and not OS.get_cmdline_user_args().has("--no-local-ai")
+	if not use_local_ai:
+		writer.status = "Procedural contracts"
+	writer.status_changed.connect(_writer_status_changed)
+	writer.stories_ready.connect(_apply_stories)
+	_save_and_render(false)
+	if use_local_ai:
+		writer.discover()
 
 
 func _render(preserve_scroll := false) -> void:
@@ -45,7 +75,6 @@ func _render(preserve_scroll := false) -> void:
 		remove_child(shell)
 		shell.queue_free()
 
-	var result := rules.debrief(state)
 	shell = HBoxContainer.new()
 	add_child(shell)
 	shell.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -54,11 +83,12 @@ func _render(preserve_scroll := false) -> void:
 	var sidebar := _panel(shell, RAIL, LINE, 16)
 	_panel_frame(sidebar).custom_minimum_size.x = 177
 	_text(sidebar, "GUILDBOUND", 22, GOLD, true)
-	_text(sidebar, "The Alder Company", 13, MUTED)
+	_text(sidebar, state.charter.name if state.chartered else "Founding charter", 13, MUTED)
 	_space(sidebar, 15)
-	for entry: Array in [["roster", "Roster"], ["contract", "Contract"], ["journal", "Journal"]]:
-		var nav := _button(sidebar, entry[1], _navigate.bind(entry[0]), screen == entry[0])
-		nav.alignment = HORIZONTAL_ALIGNMENT_LEFT
+	if state.chartered:
+		for entry: Array in [["map", "Quest map"], ["roster", "Roster"], ["contract", "Expedition"], ["journal", "Journal"], ["guild", "Guildhall"], ["armory", "Armory"], ["recruit", "Recruitment"]]:
+			var nav := _button(sidebar, entry[1], _navigate.bind(entry[0]), screen == entry[0] or (screen == "character" and entry[0] == "roster"))
+			nav.alignment = HORIZONTAL_ALIGNMENT_LEFT
 	var rail_spacer := Control.new()
 	rail_spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	sidebar.add_child(rail_spacer)
@@ -70,11 +100,13 @@ func _render(preserve_scroll := false) -> void:
 	var top_row := _row(top)
 	var place := _text(top_row, "Alderford  /  Guildhall", 14, MUTED)
 	place.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	var treasury := 120 + int(result.get("gold", 0))
-	_text(top_row, "%d gp treasury" % treasury, 14, GOLD)
-	_text(top_row, "%s patron standing" % _signed(result.get("standing", 0)), 14, INK)
+	_text(top_row, "%d gp treasury" % state.treasury, 14, GOLD)
+	if state.chartered:
+		_text(top_row, "Day %d" % state.day, 16, GOLD)
+		var time_button := _button(top_row, "Resume" if state.paused else "Pause", _toggle_time, state.paused)
+		time_button.tooltip_text = "One game day passes every %d seconds while time is running." % int(Campaign.DAY_SECONDS)
 	if save_failed:
-		_text(workspace, "Could not save this expedition. Progress is available for this session.", 14, RUST)
+		_text(workspace, "Could not save guild progress to disk.", 14, RUST)
 
 	scroll = ScrollContainer.new()
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -91,45 +123,44 @@ func _render(preserve_scroll := false) -> void:
 	aside.custom_minimum_size.x = 284
 
 	match screen:
+		"map":
+			_map_screen(main, aside)
 		"roster":
-			_roster(main, result)
-			_contract_brief(aside)
+			_roster(main)
 			_party_panel(aside)
 		"contract":
-			_contract(main, result)
-			_contract_brief(aside)
+			_contract(main)
+			if not state.expedition.is_empty():
+				_contract_brief(aside, rules.contract(state))
 			_party_panel(aside)
 		"journal":
-			_journal(main, aside, result)
+			_journal(main, aside)
+		_:
+			management.render(screen, state, main, aside)
 	if previous_scroll > 0:
 		scroll.set_deferred("scroll_vertical", previous_scroll)
 
 
-func _roster(parent: VBoxContainer, result: Dictionary) -> void:
+func _roster(parent: VBoxContainer) -> void:
 	var subtitle := "Choose three adventurers, then assign a Captain and a Scout."
 	if not state.expedition.is_empty():
-		subtitle = "This is the lineup that departed for Ashford Crossing."
+		subtitle = "This party is in the field at %s." % rules.contract(state).location
 	_heading(parent, "Guild roster", "Assemble the party", subtitle)
 	var grid := GridContainer.new()
 	grid.columns = 3
 	grid.add_theme_constant_override("h_separation", 11)
 	grid.add_theme_constant_override("v_separation", 11)
 	parent.add_child(grid)
-	for member: Dictionary in rules.scenario.adventurers:
-		_member_card(grid, member)
-	_bonds(parent, result)
+	for id: String in state.guild_roster:
+		_member_card(grid, rules.members[id])
+	_bonds(parent)
 
 
 func _member_card(grid: GridContainer, member: Dictionary) -> void:
 	var selected: bool = state.party.has(member.id)
 	var card := _panel(grid, SURFACE, GOLD.darkened(0.42) if selected else LINE, 10)
 	_panel_frame(card).size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	var portrait := TextureRect.new()
-	portrait.texture = load("res://assets/%s.jpg" % member.id)
-	portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
-	portrait.custom_minimum_size = Vector2(116, 108)
-	card.add_child(portrait)
+	_add_portrait(card, member.id, 108)
 	var role := ""
 	if state.roles.captain == member.id:
 		role = "Captain"
@@ -137,37 +168,172 @@ func _member_card(grid: GridContainer, member: Dictionary) -> void:
 		role = "Scout"
 	elif rules.support_id(state) == member.id:
 		role = "Support"
-	var details := "%s · Level %d" % [member.className, member.level]
+	var progress: Dictionary = state.character_progress[member.id]
+	var details := "%s · Level %d" % [member.className, rules.characters.level(progress.xp)]
 	if member.get("prospect", false):
 		details += " · Prospect"
 	_text(card, details, 12, CLASS_COLORS[member.tone])
 	_text(card, member.name, 23, INK, true)
-	if role != "":
+	if state.scouting.get("member", "") == member.id:
+		_text(card, "Scouting recruits", 13, GOLD)
+	elif role != "":
 		_text(card, role, 13, GOLD)
 	else:
 		_text(card, "Selected" if selected else "Available", 13, MUTED)
 	_text(card, member.specialty, 12, MUTED)
-	var show_scores: bool = expanded_scores.get(member.id, false)
-	_button(card, "Hide ability scores" if show_scores else "View ability scores", _toggle_scores.bind(member.id))
-	if show_scores:
-		var scores := PackedStringArray()
-		for key: String in member.scores:
-			scores.append("%s %d" % [key.to_upper(), member.scores[key]])
-		_text(card, "  ".join(scores), 12, MUTED)
+	_button(card, "Character sheet", management._open_character.bind(member.id))
 	if state.expedition.is_empty():
 		var action := _button(card, "✓  In party" if selected else "+  Add to party", _toggle_member.bind(member.id), selected)
 		action.disabled = not selected and state.party.size() >= int(rules.scenario.partySize)
 		action.tooltip_text = "Remove %s from the party" % member.name if selected else "Add %s to the party" % member.name
 
 
-func _contract_brief(parent: VBoxContainer) -> void:
-	var brief: Dictionary = rules.scenario.contract
+func _add_portrait(parent: VBoxContainer, id: String, height: int) -> void:
+	var path := "res://assets/%s.jpg" % id
+	if not ResourceLoader.exists(path):
+		return
+	var portrait := TextureRect.new()
+	portrait.texture = load(path)
+	portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	portrait.custom_minimum_size = Vector2(116, height)
+	parent.add_child(portrait)
+
+
+func _map_screen(parent: VBoxContainer, aside: VBoxContainer) -> void:
+	_heading(parent, "Quest map", rules.board.world.region, "Select a site for local quests. Scroll to zoom and drag to pan.")
+	var controls := _row(parent, 8)
+	var map := RegionMap.new()
+	map.sites = rules.board.world.sites
+	map.font = serif
+	map.zoom = map_zoom
+	map.focus = map_focus
+	map.camera_changed.connect(_save_map_camera)
+	_button(controls, "−", map.change_zoom.bind(0.8)).tooltip_text = "Zoom out"
+	_button(controls, "+", map.change_zoom.bind(1.25)).tooltip_text = "Zoom in"
+	_button(controls, "Reset view", map.reset_camera)
+	parent.add_child(map)
+	var trip: Dictionary = state.expedition
+	if not trip.is_empty():
+		map.active_site = rules.contract(state).get("site", "ashford")
+		map.route_step = _route_step(trip)
+	for site: Dictionary in rules.board.world.sites:
+		var quests := _quests_at(site.id)
+		var has_party: bool = site.id == map.active_site
+		if quests.is_empty() and not has_party:
+			continue
+		var marker_title: String = site.name
+		var action := _inspect_site.bind(site.id)
+		if has_party:
+			marker_title += " · Party"
+		elif quests.size() > 1:
+			marker_title += " · %d quests" % quests.size()
+		else:
+			marker_title += " · %dd" % (quests[0].deadline - state.day)
+		if quests.is_empty():
+			action = _navigate.bind("contract")
+		var marker := _button(map, marker_title, action, site.id == selected_site or has_party)
+		marker.tooltip_text = "View quests at %s" % site.name if not quests.is_empty() else "View active expedition"
+		map.add_marker(site.id, Vector2(site.map[0], site.map[1]), marker)
+	var writer_row := _row(parent, 8)
+	_text(writer_row, writer.status, 12, MUTED).size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	if use_local_ai and writer.model == "" and writer.operation == "":
+		_button(writer_row, "Reconnect AI", _reconnect_ai)
+	var notices := _panel(parent)
+	_text(notices, "Guild notices", 22, INK, true)
+	if state.notices.is_empty():
+		_text(notices, "Expiring quests and recruitment reports appear here.", 13, MUTED)
+	for notice: Dictionary in state.notices.slice(0, 3):
+		_text(notices, "Day %d · %s" % [notice.day, notice.title], 14, INK)
+		_text(notices, str(notice.note).left(1).to_upper() + str(notice.note).substr(1), 13, MUTED)
+	var offer := rules.board.by_id(state, selected_quest)
+	if offer.is_empty():
+		_map_offer_list(aside)
+	else:
+		_quest_details(aside, offer)
+	_party_panel(aside)
+
+
+func _quests_at(site: String) -> Array[Dictionary]:
+	var quests: Array[Dictionary] = []
+	for offer: Dictionary in state.offers:
+		if site == "" or offer.site == site:
+			quests.append(offer)
+	return quests
+
+
+func _map_offer_list(parent: VBoxContainer) -> void:
+	var panel := _panel(parent)
+	var quests := _quests_at(selected_site)
+	if selected_site != "":
+		_text(panel, rules.board.sites[selected_site].name, 23, INK, true)
+		_button(panel, "All quests", _inspect_site.bind(""))
+	else:
+		_text(panel, "Available quests", 23, INK, true)
+	if quests.is_empty():
+		_text(panel, "There are no open quests at this site.", 13, MUTED)
+	for quest in quests:
+		var button := _button(panel, quest.title, _inspect_quest.bind(quest.id))
+		button.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+		_text(panel, "%s · %dd left" % [quest.location, quest.deadline - state.day], 12, MUTED)
+
+
+func _save_map_camera(zoom: float, focus: Vector2) -> void:
+	map_zoom = zoom
+	map_focus = focus
+
+
+func _route_step(trip: Dictionary) -> float:
+	var quest: Dictionary = trip.get("quest", {})
+	if quest.is_empty() or quest.travel == 0 or trip.phase == "decision" or trip.phase == "work":
+		return 1.0
+	var remaining := float(trip.due_day - state.day) / float(quest.travel)
+	return 1.0 - remaining if trip.phase == "outbound" else remaining
+
+
+func _quest_details(parent: VBoxContainer, offer: Dictionary) -> void:
+	_button(parent, "Back to quests", _inspect_site.bind(offer.site, false))
+	var panel := _contract_brief(parent, offer)
+	if offer.has("line"):
+		_text(panel, "%s · Chapter %d of %d" % [offer.line_title, offer.chapter + 1, offer.chapters], 13, GOLD)
+	elif offer.source == "ai":
+		_text(panel, "AI-written quest", 12, MUTED)
+	_text(panel, "Closes in %s · Day %d" % [_days(offer.deadline - state.day), offer.deadline], 14, GOLD)
+	var duration := "In town · %s on site" % _days(offer.work) if offer.travel == 0 else "%s out · %s on site · %s back" % [_days(offer.travel), _days(offer.work), _days(offer.travel)]
+	_text(panel, duration, 13, INK)
+	_text(panel, "%d XP per adventurer on success" % offer.xp, 13, MUTED)
+	if rules.ready(state) and state.expedition.is_empty():
+		var best := 0
+		for plan: Dictionary in offer.responses:
+			var chance := rules.success_chance(state, plan)
+			best = maxi(best, chance)
+			_text(panel, "%s · %d%%" % [plan.title, chance], 13, MUTED)
+		var risk := "Favourable" if best >= 70 else ("Risky" if best < 40 else "Challenging")
+		_text(panel, "%s for this party" % risk, 14, RUST if best < 40 else GOLD)
+		var button := _button(panel, "Take quest in town" if offer.travel == 0 else "Accept and depart", _depart.bind(offer.id), true)
+		button.disabled = not rules.can_leave(state)
+		if button.disabled:
+			_text(panel, "An expedition member is scouting for recruits.", 13, MUTED)
+	elif not state.expedition.is_empty():
+		_text(panel, "The party is already in the field.", 13, MUTED)
+	else:
+		_button(panel, "Assemble the party", _navigate.bind("roster"), true)
+
+
+func _contract_brief(parent: VBoxContainer, brief: Dictionary) -> VBoxContainer:
 	var panel := _panel(parent, Color("#2c271d"), Color("#63543b"))
-	_kicker(panel, "Patron contract")
 	_text(panel, brief.title, 28, INK, true)
-	_text(panel, brief.patron + " · " + brief.affiliation, 13, GOLD)
+	if brief.patron != "":
+		_text(panel, brief.patron + " · " + brief.affiliation, 13, GOLD)
+	else:
+		_text(panel, "Independent lead", 13, GOLD)
 	_text(panel, brief.brief, 14, MUTED)
-	_text(panel, "%s · %d gp fee" % [brief.location, brief.fee], 13, INK)
+	_text(panel, "%s · %d gp fee" % [brief.location, brief.fee] if brief.patron != "" else brief.location, 13, INK)
+	return panel
+
+
+func _days(amount: int) -> String:
+	return "%d %s" % [amount, "day" if amount == 1 else "days"]
 
 
 func _party_panel(parent: VBoxContainer) -> void:
@@ -195,36 +361,28 @@ func _party_panel(parent: VBoxContainer) -> void:
 	var support := rules.support_id(state)
 	_text(panel, "Support   " + (rules.members[support].name if support != "" else "—"), 13, MUTED)
 	if state.expedition.is_empty():
-		var button := _button(panel, "Depart for Ashford   →", _depart, true)
-		button.disabled = not rules.ready(state)
 		var missing: int = size - state.party.size()
 		if missing > 0:
 			_text(panel, "Choose %d more adventurer%s." % [missing, "" if missing == 1 else "s"], 12, MUTED)
 		elif not rules.ready(state):
 			_text(panel, "Assign both roles before departing.", 12, MUTED)
-		else:
-			_text(panel, "Remove a member to try a different lineup.", 12, MUTED)
-	elif screen == "roster":
-		if state.expedition.choice == "":
-			_button(panel, "Read the Scout’s report", _navigate.bind("contract"), true)
-		else:
-			_button(panel, "Read the debrief", _navigate.bind("journal"), true)
+		if screen == "roster":
+			_button(panel, "View the quest map", _navigate.bind("map"), rules.ready(state))
+	elif screen != "contract":
+		_button(panel, "View active expedition", _navigate.bind("contract"), true)
 
-
-func _bonds(parent: VBoxContainer, result: Dictionary) -> void:
+func _bonds(parent: VBoxContainer) -> void:
 	var panel := _panel(parent)
 	_text(panel, "Party relationships", 23, INK, true)
-	var has_result := not result.is_empty()
-	var relationships: Array = result.bonds if has_result else rules.bonds(state)
+	var relationships := rules.bonds(state)
 	if relationships.is_empty():
 		_text(panel, "Choose at least two adventurers to see their shared history.", 13, MUTED)
 		return
-	if not has_result:
-		var bonus := _text(panel, "%s chemistry" % _signed(rules.chemistry(state)), 13, GOLD)
-		bonus.tooltip_text = "Every 3 points of shared trust give +1. A Captain and Scout with at least 3 trust give another +1."
-		bonus.mouse_filter = Control.MOUSE_FILTER_PASS
+	var bonus := _text(panel, "%s chemistry" % _signed(rules.chemistry(state)), 13, GOLD)
+	bonus.tooltip_text = "Every 3 points of shared trust give +1. A Captain and Scout with at least 3 trust give another +1."
+	bonus.mouse_filter = Control.MOUSE_FILTER_PASS
 	for bond: Dictionary in relationships:
-		var trust: int = bond.after if has_result else bond.trust
+		var trust: int = bond.trust
 		var row := _row(panel)
 		var names := _column(row, 2)
 		names.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -233,70 +391,94 @@ func _bonds(parent: VBoxContainer, result: Dictionary) -> void:
 		_text(row, "%s · %s" % [_trust_name(trust), _signed(trust)], 13, GREEN if trust > 0 else MUTED)
 
 
-func _contract(parent: VBoxContainer, result: Dictionary) -> void:
-	var brief: Dictionary = rules.scenario.contract
-	_heading(parent, "Patron contract", brief.title, brief.location + " · The river is rising.")
-	var report := _panel(parent, SURFACE, Color("#63543b"))
-	if state.expedition.is_empty():
-		_kicker(report, "The assignment")
-		_text(report, "Secure the west crossing", 25, INK, true)
-		_text(report, brief.brief, 16, INK)
-		_button(report, "Assemble the party", _navigate.bind("roster"), true)
+func _contract(parent: VBoxContainer) -> void:
+	var trip: Dictionary = state.expedition
+	if trip.is_empty():
+		_heading(parent, "Expedition", "The party is at the guildhall", "Choose a contract on the quest map to send the party out.")
+		_button(parent, "Open quest map", _navigate.bind("map"), true)
 		return
-	_kicker(report, "Scout’s report")
-	_text(report, rules.members[state.roles.scout].name + " returned from the riverbank", 25, INK, true)
-	_text(report, "“" + brief.report + "”", 23, INK, true)
-	if not result.is_empty():
-		_button(parent, "Read the debrief", _navigate.bind("journal"), true)
+	var brief := rules.contract(state)
+	_heading(parent, "Expedition", brief.title, brief.location)
+	var progress := _panel(parent, SURFACE, Color("#63543b"))
+	if trip.phase != "decision":
+		var phase_title: String = {
+			"outbound": "Travelling to %s" % brief.location,
+			"work": "The party is working on site",
+			"return": "Returning to Alderford",
+		}[trip.phase]
+		_text(progress, phase_title, 27, INK, true)
+		_text(progress, "%s remaining · Day %d" % [_days(trip.due_day - state.day), trip.due_day], 15, GOLD)
+		if state.paused:
+			_button(progress, "Resume time", _toggle_time, true)
 		return
+	_kicker(progress, "Scout’s report")
+	_text(progress, rules.members[state.roles.scout].name, 15, GOLD)
+	_text(progress, "“" + brief.report + "”", 24, INK, true)
 	_text(parent, "How should the Captain respond?", 25, INK, true)
-	for order: Dictionary in rules.scenario.responses:
-		var check := rules.check(state, order.id)
-		var chance := clampi(21 + int(check.bonus) - int(check.dc), 0, 20) * 5
+	for order: Dictionary in rules.plans(state):
+		var chance := rules.success_chance(state, order)
 		var card := _panel(parent)
 		_kicker(card, order.focus)
 		_text(card, order.description, 14, MUTED)
 		_button(card, "%s  ·  %d%% success chance" % [order.title, chance], _choose.bind(order.id), true)
 
 
-func _journal(parent: VBoxContainer, aside: VBoxContainer, result: Dictionary) -> void:
-	_contract_brief(aside)
-	if result.is_empty():
+func _journal(parent: VBoxContainer, aside: VBoxContainer) -> void:
+	if state.journal.is_empty():
 		_heading(parent, "Guild journal", "Expedition records", "Completed contracts and their consequences appear here.")
-		var empty := _panel(parent)
-		_text(empty, "No expeditions recorded", 24, INK, true)
-		var departed: bool = not state.expedition.is_empty()
-		_button(empty, "Return to the contract" if departed else "Return to the roster", _navigate.bind("contract" if departed else "roster"))
+		_button(parent, "Open quest map", _navigate.bind("map"), true)
 		return
-	_heading(parent, "Guild journal", "Expedition debrief", rules.scenario.contract.title + " · Ashford Crossing")
-	_result_panel(parent, result)
-	_bonds(parent, result)
+	var records := _panel(aside)
+	_text(records, "Expedition records", 23, INK, true)
+	for index in state.journal.size():
+		var record: Dictionary = state.journal[index]
+		var button := _button(records, "Day %d · %s" % [record.day, rules.contract(record.run).title], _select_record.bind(index), index == journal_index)
+		button.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	var selected: Dictionary = state.journal[journal_index]
+	var run: Dictionary = selected.run
+	var result := rules.debrief(run)
+	var contract := rules.contract(run)
+	_heading(parent, "Guild journal", contract.title, "%s · Returned on day %d" % [contract.location, selected.day])
+	_result_panel(parent, result, contract.patron)
+	_show_rewards(parent, selected.get("rewards", {}))
+	if not result.prospects.is_empty():
+		var prospects := _panel(parent)
+		for prospect: String in result.prospects:
+			_text(prospects, "%s logged field experience as a guild prospect." % prospect, 13, GOLD)
 	var compare := _panel(parent)
 	_text(compare, "Compare a different response", 23, INK, true)
 	_text(compare, "Use the same party and die roll to see what another order would have changed.", 13, MUTED)
-	for order: Dictionary in rules.scenario.responses:
+	for order: Dictionary in rules.plans(run):
 		if order.id != result.order.id:
 			_button(compare, order.title, _compare.bind(order.id), comparison == order.id)
 	if comparison != "":
-		_result_panel(compare, rules.debrief(state, comparison))
-
-	var record := _panel(aside)
-	_text(record, "Guild record", 23, INK, true)
-	_text(record, "The journal keeps the expedition, its payout, and the party’s relationship changes.", 13, MUTED)
-	for prospect: String in result.prospects:
-		_text(record, "%s logged a first field expedition as a guild prospect." % prospect, 13, GOLD)
-	_button(record, "Start a new playthrough", _confirm_reset)
+		_result_panel(compare, rules.debrief(run, comparison), contract.patron)
+	_button(records, "Start a new playthrough", _confirm_reset)
 
 
-func _result_panel(parent: VBoxContainer, result: Dictionary) -> void:
+func _show_rewards(parent: VBoxContainer, rewards: Dictionary) -> void:
+	if int(rewards.get("xp", 0)) == 0 and rewards.get("loot", "") == "":
+		return
+	var panel := _panel(parent)
+	_text(panel, "Expedition rewards", 24, INK, true)
+	_text(panel, "%d XP per adventurer" % rewards.xp, 14, GOLD)
+	if rewards.loot != "":
+		_text(panel, "%s added to the guild stash." % rules.characters.items[rewards.loot].name, 14, GREEN)
+	for id: String in rewards.levels:
+		_text(panel, "%s reached level %d." % [rules.members[id].name, rewards.levels[id]], 14, GOLD)
+
+
+func _result_panel(parent: VBoxContainer, result: Dictionary, patron: String) -> void:
 	var panel := _panel(parent)
 	_text(panel, "PLAN SUCCEEDED" if result.success else "PLAN FELL SHORT", 12, GREEN if result.success else RUST)
 	_text(panel, result.order.title, 28, INK, true)
 	_text(panel, result.story, 15, INK)
 	var metrics := _row(panel, 8)
 	_metric(metrics, "Check total", "%d / DC %d" % [result.total, result.check.dc])
-	_metric(metrics, "Contract payout", "%d gp" % result.gold)
-	_metric(metrics, "Patron standing", _signed(result.standing))
+	if patron != "":
+		_metric(metrics, "Contract payout", "%d gp" % result.gold)
+		_metric(metrics, "Patron standing", _signed(result.standing))
+		_text(panel, patron, 13, MUTED)
 	_text(panel, "Check breakdown", 19, INK, true)
 	_check_line(panel, "d20 roll", str(result.roll))
 	for contribution: Dictionary in result.check.contributions:
@@ -327,11 +509,6 @@ func _navigate(destination: String) -> void:
 	_render()
 
 
-func _toggle_scores(id: String) -> void:
-	expanded_scores[id] = not expanded_scores.get(id, false)
-	_render(true)
-
-
 func _toggle_member(id: String) -> void:
 	if rules.toggle_member(state, id):
 		_save_and_render()
@@ -342,16 +519,121 @@ func _assign_role(index: int, role: String, ids: Array) -> void:
 		_save_and_render()
 
 
-func _depart() -> void:
-	if rules.depart(state, randi_range(1, 20)):
+func _inspect_site(site: String, open_single := true) -> void:
+	selected_site = site
+	selected_quest = ""
+	var quests := _quests_at(site)
+	if open_single and site != "" and quests.size() == 1:
+		_inspect_quest(quests[0].id)
+	else:
+		_render(true)
+
+
+func _inspect_quest(id: String) -> void:
+	var offer := rules.board.by_id(state, id)
+	if not offer.is_empty():
+		selected_site = offer.site
+		selected_quest = id
+		inspected[id] = true
+		_render(true)
+
+
+func _depart(id: String) -> void:
+	if rules.accept(state, id, randi_range(1, 20)):
+		selected_quest = ""
 		screen = "contract"
+		clock.paused = state.paused
 		_save_and_render(false)
+		_generate_open_offers()
 
 
 func _choose(id: String) -> void:
-	if rules.record(state, id):
-		screen = "journal"
+	if rules.choose_plan(state, id):
+		if state.expedition.is_empty():
+			_open_debrief()
 		_save_and_render(false)
+
+
+func _toggle_time() -> void:
+	state.paused = not state.paused
+	clock.paused = state.paused
+	_save_and_render()
+
+
+func _day_passed() -> void:
+	if not rules.advance_day(state):
+		return
+	clock.paused = state.paused
+	if state.paused:
+		if state.expedition.is_empty():
+			_open_debrief()
+		else:
+			screen = "contract"
+	_save_and_render(not state.paused)
+	_generate_open_offers()
+
+
+func _open_debrief() -> void:
+	screen = "journal"
+	journal_index = 0
+	comparison = ""
+
+
+func _select_record(index: int) -> void:
+	journal_index = index
+	comparison = ""
+	_render()
+
+
+func _reconnect_ai() -> void:
+	requested.clear()
+	writer.discover()
+
+
+func _writer_status_changed() -> void:
+	if screen == "map":
+		_render(true)
+	# Allow the completed request to deliver its stories before queueing the next batch.
+	_generate_open_offers.call_deferred()
+
+
+func _generate_open_offers() -> void:
+	if not use_local_ai or not writer.can_write():
+		return
+	var drafts: Array = []
+	for offer: Dictionary in state.offers:
+		if offer.source != "procedural" or inspected.has(offer.id) or requested.has(offer.id):
+			continue
+		requested[offer.id] = true
+		var site: Dictionary = rules.board.sites[offer.site]
+		drafts.append({
+			"id": offer.id, "location": site.name, "lore": site.lore,
+			"patron": offer.patron, "affiliation": offer.affiliation, "seed_title": offer.title,
+			"suggested_work": offer.brief, "possible_complication": offer.report,
+			"approaches": [offer.responses[0].title, offer.responses[1].title],
+		})
+	if drafts.is_empty():
+		return
+	var context: Array = state.notices.slice(0, 3)
+	for entry: Dictionary in state.journal.slice(0, 3):
+		var result := rules.debrief(entry.run)
+		context.append({"day": entry.day, "title": rules.contract(entry.run).title, "outcome": result.story})
+	writer.write_stories(rules.board.world, state.day, context, drafts)
+
+
+func _apply_stories(stories: Array) -> void:
+	var changed := false
+	for story: Variant in stories:
+		if not story is Dictionary or not story.get("id") is String or inspected.has(story.id) or not requested.has(story.id):
+			continue
+		var offer := rules.board.by_id(state, story.id)
+		if not offer.is_empty() and offer.source == "procedural" and rules.board.apply_story(state, offer, story):
+			changed = true
+	if changed:
+		if screen == "map":
+			_save_and_render()
+		else:
+			save_failed = GuildSave.write(state, save_path) != OK
 
 
 func _compare(id: String) -> void:
@@ -362,7 +644,7 @@ func _compare(id: String) -> void:
 func _confirm_reset() -> void:
 	var dialog := ConfirmationDialog.new()
 	dialog.title = "Start a new playthrough"
-	dialog.dialog_text = "Clear the current expedition and its journal entry?"
+	dialog.dialog_text = "Clear guild progress, including the current expedition and journal?"
 	dialog.get_ok_button().text = "Start over"
 	dialog.confirmed.connect(_reset)
 	dialog.confirmed.connect(dialog.queue_free)
@@ -373,10 +655,22 @@ func _confirm_reset() -> void:
 
 func _reset() -> void:
 	state = rules.fresh()
+	rules.open_session(state)
+	clock.start()
+	clock.paused = true
+	selected_quest = ""
+	selected_site = ""
+	map_zoom = 1.0
+	map_focus = Vector2(0.5, 0.5)
+	inspected.clear()
+	requested.clear()
+	journal_index = 0
 	comparison = ""
-	expanded_scores.clear()
-	screen = "roster"
+	management.reset()
+	screen = "founding"
 	_save_and_render(false)
+	if use_local_ai:
+		writer.discover()
 
 
 func _save_and_render(preserve_scroll := true) -> void:

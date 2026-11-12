@@ -25,8 +25,12 @@ func fresh() -> Dictionary:
 	}
 
 
-func valid_state(state: Variant) -> bool:
-	if not state is Dictionary or state.get("version") != SAVE_VERSION:
+func restore(saved: Variant) -> Dictionary:
+	return saved if valid_state(saved) else fresh()
+
+
+func valid_state(state: Variant, version := SAVE_VERSION) -> bool:
+	if not state is Dictionary or state.get("version") != version:
 		return false
 	var party: Variant = state.get("party")
 	var roles: Variant = state.get("roles")
@@ -47,7 +51,7 @@ func valid_state(state: Variant) -> bool:
 		return true
 	var roll: Variant = expedition.get("roll")
 	var choice: Variant = expedition.get("choice")
-	return ready(state) and roll is int and roll >= 1 and roll <= 20 and choice is String and (choice == "" or orders.has(choice))
+	return ready(state) and roll is int and roll >= 1 and roll <= 20 and choice is String and (choice == "" or not _order(state, choice).is_empty())
 
 
 func toggle_member(state: Dictionary, id: String) -> bool:
@@ -95,7 +99,7 @@ func depart(state: Dictionary, roll: int) -> bool:
 
 
 func record(state: Dictionary, order_id: String) -> bool:
-	if state.expedition.is_empty() or state.expedition.choice != "" or not orders.has(order_id):
+	if state.expedition.is_empty() or state.expedition.choice != "" or _order(state, order_id).is_empty():
 		return false
 	state.expedition.choice = order_id
 	return true
@@ -112,8 +116,19 @@ func bonds(state: Dictionary) -> Array[Dictionary]:
 					bond.trust = int(known.trust)
 					bond.history = known.history
 					break
+			var key := bond_key(pair)
+			var learned: Dictionary = state.get("trust", {}).get(key, {})
+			if not learned.is_empty():
+				bond.trust = learned.value
+				bond.history = learned.history
 			result.append(bond)
 	return result
+
+
+func bond_key(pair: Array) -> String:
+	var sorted := pair.duplicate()
+	sorted.sort()
+	return "%s/%s" % [sorted[0], sorted[1]]
 
 
 func _lead_pair(state: Dictionary, pair: Array) -> bool:
@@ -130,8 +145,23 @@ func chemistry(state: Dictionary) -> int:
 	return floori(shared / 3.0) + lead_bonus
 
 
+func _order(state: Dictionary, order_id: String) -> Dictionary:
+	if not state.expedition.has("quest"):
+		return orders.get(order_id, {})
+	var quest: Variant = state.expedition.quest
+	if not quest is Dictionary or not quest.get("responses") is Array:
+		return {}
+	for order: Variant in quest.responses:
+		if order is Dictionary and order.get("id") == order_id:
+			return order
+	return {}
+
+
 func check(state: Dictionary, order_id: String) -> Dictionary:
-	var order: Dictionary = orders[order_id]
+	return check_plan(state, _order(state, order_id))
+
+
+func check_plan(state: Dictionary, order: Dictionary) -> Dictionary:
 	var roles := [
 		["Captain", state.roles.captain, order.leadAbility],
 		["Scout", state.roles.scout, order.scoutAbility],
@@ -143,20 +173,29 @@ func check(state: Dictionary, order_id: String) -> Dictionary:
 	for role: Array in roles:
 		var member: Dictionary = members[role[1]]
 		var ability: String = role[2]
-		var modifier := floori((float(member.scores[ability]) - 10.0) / 2.0)
+		var modifier := _ability_modifier(state, member, ability)
 		contributions.append({"role": role[0], "name": member.name, "ability": ability, "modifier": modifier})
 		bonus += modifier
 	return {"contributions": contributions, "chemistry": bond_bonus, "bonus": bonus, "dc": int(order.dc)}
+
+
+func _ability_modifier(_state: Dictionary, member: Dictionary, ability: String) -> int:
+	return floori((float(member.scores[ability]) - 10.0) / 2.0)
+
+
+func success_chance(state: Dictionary, order: Dictionary) -> int:
+	var plan := check_plan(state, order)
+	return clampi(21 + int(plan.bonus) - int(plan.dc), 0, 20) * 5
 
 
 func debrief(state: Dictionary, order_id: String = "") -> Dictionary:
 	if state.expedition.is_empty():
 		return {}
 	var choice: String = order_id if order_id != "" else state.expedition.choice
-	if not orders.has(choice):
+	var order := _order(state, choice)
+	if order.is_empty():
 		return {}
-	var order: Dictionary = orders[choice]
-	var resolution := check(state, choice)
+	var resolution := check_plan(state, order)
 	var roll: int = state.expedition.roll
 	var total := roll + int(resolution.bonus)
 	var success := total >= int(resolution.dc)

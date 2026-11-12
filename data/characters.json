@@ -1,0 +1,628 @@
+{
+  "profiles": {
+    "mara": {
+      "ancestry": "Human",
+      "background": "Soldier",
+      "alignment": "Lawful Good",
+      "traits": "Insists on bringing everyone home. Owes the road watch a winter’s wages.",
+      "skills": [
+        "Athletics",
+        "Intimidation",
+        "Persuasion",
+        "Insight"
+      ],
+      "languages": [
+        "Common",
+        "Dwarvish"
+      ],
+      "tools": [
+        "Dice set",
+        "Land vehicles"
+      ],
+      "gear": [
+        "longsword",
+        "chain_mail",
+        "shield"
+      ],
+      "expertise": [],
+      "speed": 30
+    },
+    "rowan": {
+      "ancestry": "Wood Elf",
+      "background": "Outlander",
+      "alignment": "Neutral Good",
+      "traits": "Keeps a record of the places others pass by. Takes promises to the dead seriously.",
+      "skills": [
+        "Survival",
+        "Athletics",
+        "Perception",
+        "Nature",
+        "Stealth",
+        "Animal Handling"
+      ],
+      "languages": [
+        "Common",
+        "Elvish"
+      ],
+      "tools": [
+        "Flute"
+      ],
+      "gear": [
+        "longbow",
+        "leather",
+        "trail_map"
+      ],
+      "expertise": [],
+      "speed": 35
+    },
+    "ilya": {
+      "ancestry": "High Elf",
+      "background": "Sage",
+      "alignment": "True Neutral",
+      "traits": "Collects broken mechanisms and always asks who built them. Protects her old mentor’s reputation.",
+      "skills": [
+        "Arcana",
+        "History",
+        "Investigation",
+        "Insight",
+        "Perception"
+      ],
+      "languages": [
+        "Common",
+        "Elvish",
+        "Draconic",
+        "Dwarvish"
+      ],
+      "tools": [],
+      "gear": [
+        "quarterstaff",
+        "arcane_focus"
+      ],
+      "expertise": [],
+      "speed": 30
+    },
+    "nyra": {
+      "ancestry": "Lightfoot Halfling",
+      "background": "Criminal",
+      "alignment": "Chaotic Neutral",
+      "traits": "Never leaves an exit unmarked. Keeps a running account of favors owed.",
+      "skills": [
+        "Stealth",
+        "Deception",
+        "Acrobatics",
+        "Investigation",
+        "Perception",
+        "Sleight of Hand"
+      ],
+      "languages": [
+        "Common",
+        "Halfling"
+      ],
+      "tools": [
+        "Thieves’ tools",
+        "Cards"
+      ],
+      "gear": [
+        "rapier",
+        "leather",
+        "thieves_tools"
+      ],
+      "expertise": [
+        "Stealth",
+        "Thieves’ tools"
+      ],
+      "speed": 25
+    },
+    "osric": {
+      "ancestry": "Dwarf (Hill)",
+      "background": "Acolyte",
+      "alignment": "Lawful Good",
+      "traits": "Counts the rescued before the reward. Carries a promise from the relief house.",
+      "skills": [
+        "Insight",
+        "Religion",
+        "Medicine",
+        "Persuasion"
+      ],
+      "languages": [
+        "Common",
+        "Dwarvish",
+        "Celestial",
+        "Elvish"
+      ],
+      "tools": [
+        "Brewer’s supplies"
+      ],
+      "gear": [
+        "mace",
+        "chain_mail",
+        "shield",
+        "holy_symbol"
+      ],
+      "expertise": [],
+      "speed": 25
+    },
+    "tess": {
+      "ancestry": "Human",
+      "background": "Folk Hero",
+      "alignment": "Neutral Good",
+      "traits": "Tests every rope twice. Wants to send money home to the reed cutters.",
+      "skills": [
+        "Animal Handling",
+        "Survival",
+        "Athletics",
+        "Perception"
+      ],
+      "languages": [
+        "Common",
+        "Halfling"
+      ],
+      "tools": [
+        "Carpenter’s tools",
+        "Land vehicles"
+      ],
+      "gear": [
+        "spear",
+        "leather",
+        "climbers_kit"
+      ],
+      "expertise": [],
+      "speed": 30
+    },
+    "sella": {
+      "ancestry": "Wood Elf",
+      "background": "Sailor",
+      "alignment": "Neutral Good",
+      "traits": "Can identify barges by the way they sit in the water. Refuses to leave debts unpaid.",
+      "skills": [
+        "Athletics",
+        "Perception",
+        "Survival",
+        "Stealth",
+        "Nature",
+        "Insight"
+      ],
+      "languages": [
+        "Common",
+        "Elvish"
+      ],
+      "tools": [
+        "Navigator’s tools",
+        "Water vehicles"
+      ],
+      "gear": [
+        "shortbow",
+        "leather",
+        "trail_map"
+      ],
+      "expertise": [],
+      "speed": 35
+    },
+    "orren": {
+      "ancestry": "Human",
+      "background": "Sage",
+      "alignment": "Lawful Neutral",
+      "traits": "Writes down each assumption before opening a lock. Wants to publish a new survey of the vale.",
+      "skills": [
+        "Arcana",
+        "History",
+        "Investigation",
+        "Medicine"
+      ],
+      "languages": [
+        "Common",
+        "Dwarvish",
+        "Draconic",
+        "Elvish"
+      ],
+      "tools": [],
+      "gear": [
+        "dagger",
+        "arcane_focus"
+      ],
+      "expertise": [],
+      "speed": 30
+    },
+    "brin": {
+      "ancestry": "Dwarf (Hill)",
+      "background": "Guild Artisan",
+      "alignment": "Neutral Good",
+      "traits": "Remembers every bridge stone she has set. Hears out an apprentice before a master.",
+      "skills": [
+        "Insight",
+        "Persuasion",
+        "Athletics",
+        "Survival"
+      ],
+      "languages": [
+        "Common",
+        "Dwarvish",
+        "Halfling"
+      ],
+      "tools": [
+        "Mason’s tools",
+        "Smith’s tools"
+      ],
+      "gear": [
+        "longsword",
+        "chain_mail",
+        "shield"
+      ],
+      "expertise": [],
+      "speed": 25
+    }
+  },
+  "recruits": [
+    {
+      "id": "sella",
+      "name": "Sella Fen",
+      "className": "Ranger",
+      "tone": "green",
+      "level": 1,
+      "specialty": "Tracks movement along waterways",
+      "scores": {
+        "str": 10,
+        "dex": 16,
+        "con": 14,
+        "int": 11,
+        "wis": 15,
+        "cha": 8
+      }
+    },
+    {
+      "id": "orren",
+      "name": "Orren Pike",
+      "className": "Wizard",
+      "tone": "blue",
+      "level": 1,
+      "specialty": "Studies seals, locks, and inscriptions",
+      "scores": {
+        "str": 8,
+        "dex": 12,
+        "con": 14,
+        "int": 16,
+        "wis": 13,
+        "cha": 10
+      }
+    },
+    {
+      "id": "brin",
+      "name": "Brin Stonewake",
+      "className": "Fighter",
+      "tone": "ochre",
+      "level": 1,
+      "specialty": "Knows stonework and shoring",
+      "scores": {
+        "str": 16,
+        "dex": 10,
+        "con": 16,
+        "int": 10,
+        "wis": 12,
+        "cha": 10
+      }
+    }
+  ],
+  "classes": {
+    "Paladin": {
+      "hit_die": 10,
+      "armor": [
+        "light",
+        "medium",
+        "heavy",
+        "shield"
+      ],
+      "weapons": [
+        "simple",
+        "martial"
+      ],
+      "saves": [
+        "wis",
+        "cha"
+      ],
+      "features": {
+        "1": "Divine Sense, Lay on Hands",
+        "2": "Fighting Style (Dueling), Spellcasting, Divine Smite",
+        "3": "Divine Health, Oath of Devotion, Channel Divinity",
+        "5": "Extra Attack",
+        "6": "Aura of Protection",
+        "7": "Aura of Devotion",
+        "10": "Aura of Courage",
+        "11": "Improved Divine Smite",
+        "14": "Cleansing Touch",
+        "15": "Purity of Spirit",
+        "18": "Extended auras",
+        "20": "Holy Nimbus"
+      },
+      "casting": "cha",
+      "half": true,
+      "spells": [
+        [],
+        [
+          "Bless",
+          "Cure Wounds",
+          "Protection from Evil and Good",
+          "Sanctuary"
+        ],
+        [
+          "Aid",
+          "Lesser Restoration",
+          "Zone of Truth"
+        ],
+        [
+          "Dispel Magic",
+          "Remove Curse"
+        ],
+        [
+          "Death Ward",
+          "Freedom of Movement"
+        ],
+        [
+          "Dispel Evil and Good",
+          "Flame Strike"
+        ]
+      ]
+    },
+    "Ranger": {
+      "hit_die": 10,
+      "armor": [
+        "light",
+        "medium",
+        "shield"
+      ],
+      "weapons": [
+        "simple",
+        "martial"
+      ],
+      "saves": [
+        "str",
+        "dex"
+      ],
+      "features": {
+        "1": "Favored Enemy (beasts), Natural Explorer (forest)",
+        "2": "Fighting Style (Archery), Spellcasting",
+        "3": "Primeval Awareness, Hunter (Colossus Slayer)",
+        "5": "Extra Attack",
+        "7": "Escape the Horde",
+        "8": "Land’s Stride",
+        "10": "Hide in Plain Sight",
+        "11": "Volley",
+        "14": "Vanish",
+        "15": "Evasion",
+        "18": "Feral Senses",
+        "20": "Foe Slayer"
+      },
+      "casting": "wis",
+      "half": true,
+      "spells": [
+        [],
+        [
+          "Hunter’s Mark",
+          "Goodberry",
+          "Cure Wounds"
+        ],
+        [
+          "Pass without Trace"
+        ],
+        [
+          "Protection from Energy",
+          "Water Breathing"
+        ],
+        [
+          "Freedom of Movement"
+        ],
+        [
+          "Commune with Nature",
+          "Tree Stride"
+        ]
+      ]
+    },
+    "Wizard": {
+      "hit_die": 6,
+      "armor": [],
+      "weapons": [
+        "dagger",
+        "quarterstaff",
+        "dart",
+        "sling",
+        "light_crossbow"
+      ],
+      "saves": [
+        "int",
+        "wis"
+      ],
+      "features": {
+        "1": "Spellcasting, Arcane Recovery",
+        "2": "School of Evocation, Sculpt Spells",
+        "6": "Potent Cantrip",
+        "10": "Empowered Evocation",
+        "14": "Overchannel",
+        "18": "Spell Mastery",
+        "20": "Signature Spells"
+      },
+      "casting": "int",
+      "spells": [
+        [
+          "Fire Bolt",
+          "Light",
+          "Mage Hand"
+        ],
+        [
+          "Mage Armor",
+          "Magic Missile",
+          "Shield",
+          "Detect Magic",
+          "Find Familiar",
+          "Sleep"
+        ],
+        [
+          "Misty Step",
+          "Scorching Ray"
+        ],
+        [
+          "Counterspell",
+          "Fireball"
+        ],
+        [
+          "Dimension Door",
+          "Ice Storm"
+        ],
+        [
+          "Cone of Cold",
+          "Wall of Force"
+        ],
+        [
+          "Disintegrate"
+        ],
+        [
+          "Teleport"
+        ],
+        [
+          "Maze"
+        ],
+        [
+          "Foresight"
+        ]
+      ]
+    },
+    "Rogue": {
+      "hit_die": 8,
+      "armor": [
+        "light"
+      ],
+      "weapons": [
+        "simple",
+        "hand_crossbow",
+        "longsword",
+        "rapier",
+        "shortsword"
+      ],
+      "saves": [
+        "dex",
+        "int"
+      ],
+      "features": {
+        "1": "Expertise, Sneak Attack, Thieves’ Cant",
+        "2": "Cunning Action",
+        "3": "Thief, Fast Hands, Second-Story Work",
+        "5": "Uncanny Dodge",
+        "6": "Expertise",
+        "7": "Evasion",
+        "9": "Supreme Sneak",
+        "11": "Reliable Talent",
+        "13": "Use Magic Device",
+        "14": "Blindsense",
+        "15": "Slippery Mind",
+        "17": "Thief’s Reflexes",
+        "18": "Elusive",
+        "20": "Stroke of Luck"
+      },
+      "extra_asi": [
+        10
+      ]
+    },
+    "Cleric": {
+      "hit_die": 8,
+      "armor": [
+        "light",
+        "medium",
+        "heavy",
+        "shield"
+      ],
+      "weapons": [
+        "simple"
+      ],
+      "saves": [
+        "wis",
+        "cha"
+      ],
+      "features": {
+        "1": "Spellcasting, Life Domain, Disciple of Life",
+        "2": "Channel Divinity, Preserve Life",
+        "5": "Destroy Undead",
+        "6": "Blessed Healer",
+        "8": "Divine Strike",
+        "10": "Divine Intervention",
+        "17": "Supreme Healing",
+        "20": "Improved Divine Intervention"
+      },
+      "casting": "wis",
+      "spells": [
+        [
+          "Guidance",
+          "Light",
+          "Sacred Flame"
+        ],
+        [
+          "Bless",
+          "Cure Wounds",
+          "Healing Word",
+          "Sanctuary"
+        ],
+        [
+          "Lesser Restoration",
+          "Spiritual Weapon"
+        ],
+        [
+          "Beacon of Hope",
+          "Revivify"
+        ],
+        [
+          "Death Ward",
+          "Freedom of Movement"
+        ],
+        [
+          "Mass Cure Wounds",
+          "Raise Dead"
+        ],
+        [
+          "Heal"
+        ],
+        [
+          "Resurrection"
+        ],
+        [
+          "Holy Aura"
+        ],
+        [
+          "Mass Heal"
+        ]
+      ]
+    },
+    "Fighter": {
+      "hit_die": 10,
+      "armor": [
+        "light",
+        "medium",
+        "heavy",
+        "shield"
+      ],
+      "weapons": [
+        "simple",
+        "martial"
+      ],
+      "saves": [
+        "str",
+        "con"
+      ],
+      "features": {
+        "1": "Fighting Style (Defense), Second Wind",
+        "2": "Action Surge",
+        "3": "Champion, Improved Critical",
+        "5": "Extra Attack",
+        "7": "Remarkable Athlete",
+        "9": "Indomitable",
+        "10": "Fighting Style (Dueling)",
+        "11": "Extra Attack (2)",
+        "13": "Indomitable (2 uses)",
+        "15": "Superior Critical",
+        "17": "Action Surge (2 uses), Indomitable (3 uses)",
+        "18": "Survivor",
+        "20": "Extra Attack (3)"
+      },
+      "extra_asi": [
+        6,
+        14
+      ]
+    }
+  }
+}
