@@ -20,6 +20,8 @@ Choose a third adventurer to complete the starting lineup, or replace party memb
 
 Install the matching Godot export templates and use **Project → Export**. The presets target macOS (Universal 2), Linux (x86-64), and Windows (x86-64). Create the corresponding subdirectories under `build/` before exporting. The Desktop prototype workflow tests the project and builds all three targets when it runs.
 
+The macOS workflow download is a single `Guildbound-macOS.zip`. Extract it and open `Guildbound.app`. Prototype builds use ad-hoc signing. If Gatekeeper prompts on first launch, macOS offers an app-specific **Open Anyway** button in **System Settings → Privacy & Security** after a launch attempt. [Apple Support](https://support.apple.com/en-us/102445)
+
 ### Tests
 
 From the repository root, run:

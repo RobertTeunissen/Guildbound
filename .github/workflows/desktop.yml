@@ -53,14 +53,15 @@ jobs:
           test -x build/linux/Guildbound.x86_64
           test -s build/windows/Guildbound.exe
           build/linux/Guildbound.x86_64 --headless --quit-after 3
-          cp docs/attribution.md build/macos/
+          zip -j build/macos/Guildbound.zip docs/attribution.md
+          mv build/macos/Guildbound.zip build/macos/Guildbound-macOS.zip
           cp docs/attribution.md build/linux/
           cp docs/attribution.md build/windows/
           tar -czf build/Guildbound-Linux.tar.gz -C build/linux .
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
-          name: Guildbound-macOS
-          path: build/macos/
+          path: build/macos/Guildbound-macOS.zip
+          archive: false
           if-no-files-found: error
       - uses: actions/upload-artifact@v4
         with:
@@ -72,3 +73,27 @@ jobs:
           name: Guildbound-Windows
           path: build/windows/
           if-no-files-found: error
+
+  verify-macos:
+    name: Verify macOS download
+    needs: desktop
+    runs-on: macos-15
+    timeout-minutes: 10
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: Guildbound-macOS.zip
+          path: ${{ runner.temp }}
+          skip-decompress: true
+      - name: Unzip and launch the app
+        shell: bash
+        run: |
+          ditto -x -k "$RUNNER_TEMP/Guildbound-macOS.zip" "$RUNNER_TEMP/guildbound"
+          app="$RUNNER_TEMP/guildbound/Guildbound.app"
+          executable="$app/Contents/MacOS/Guildbound"
+          test -x "$executable"
+          test -f "$RUNNER_TEMP/guildbound/attribution.md"
+          lipo -verify_arch arm64 x86_64 "$executable"
+          codesign --verify --deep --strict "$app"
+          "$executable" --headless --quit-after 3 2>&1 | tee "$RUNNER_TEMP/guildbound.log"
+          if grep -E 'SCRIPT ERROR:|ERROR:' "$RUNNER_TEMP/guildbound.log"; then exit 1; fi
