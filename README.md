@@ -10,4 +10,26 @@ Adventurers have recognizable 5E classes such as Paladin, Ranger, and Wizard. Pa
 
 Assemble one party and resolve one disputed expedition. The player chooses who goes, assigns a Captain and Scout, and decides how to respond when the Scout's report conflicts with what the patron asked for. The outcome should make it clear how those choices affected the party and what the guild carries into the next job.
 
-See the [prototype brief](docs/prototype.md) for the player flow and the milestone's acceptance criteria. The repository starts with the design brief. The engine and tooling are open decisions.
+### Play locally
+
+Install [Godot 4.5.1 Standard](https://godotengine.org/download/archive/4.5.1-stable/), import `project.godot` in the Project Manager, then press **F6** with `guildhall.tscn` open or **F5** to run the project. Guildbound opens in a desktop window. The game saves the active expedition and debrief in Godot’s per-user application data directory.
+
+Choose a third adventurer to complete the starting lineup, or replace party members before departing. The journal explains the roll and records the payout, patron standing, and changes in trust. Compare other orders using the same roll, or start a new playthrough from the journal to try a different lineup.
+
+### Desktop builds
+
+Install the matching Godot export templates and use **Project → Export**. The presets target macOS (Universal 2), Linux (x86-64), and Windows (x86-64). Create the corresponding subdirectories under `build/` before exporting. The Desktop prototype workflow tests the project and builds all three targets when it runs.
+
+The macOS workflow download is a single `Guildbound-macOS.zip`. Extract it and open `Guildbound.app`. Prototype builds use ad-hoc signing. If Gatekeeper prompts on first launch, macOS offers an app-specific **Open Anyway** button in **System Settings → Privacy & Security** after a launch attempt. [Apple Support](https://support.apple.com/en-us/102445)
+
+### Tests
+
+From the repository root, run:
+
+```sh
+godot --headless --editor --import
+godot --headless --script res://test/expedition_test.gd
+godot --headless --quit-after 3
+```
+
+The prototype uses SRD 5.1 classes and ability modifiers with a Guildbound expedition check and trust system. See the [prototype brief](docs/prototype.md) and [SRD attribution](docs/attribution.md).

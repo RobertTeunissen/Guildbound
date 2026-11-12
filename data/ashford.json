@@ -1,0 +1,251 @@
+{
+  "abilities": {
+    "str": "Strength",
+    "dex": "Dexterity",
+    "con": "Constitution",
+    "int": "Intelligence",
+    "wis": "Wisdom",
+    "cha": "Charisma"
+  },
+  "adventurers": [
+    {
+      "id": "mara",
+      "name": "Mara Vale",
+      "className": "Paladin",
+      "level": 3,
+      "tone": "amber",
+      "specialty": "Rallies people under pressure",
+      "scores": {
+        "str": 16,
+        "dex": 10,
+        "con": 14,
+        "int": 9,
+        "wis": 12,
+        "cha": 16
+      }
+    },
+    {
+      "id": "rowan",
+      "name": "Rowan Thorne",
+      "className": "Ranger",
+      "level": 3,
+      "tone": "green",
+      "specialty": "Reads terrain and tracks",
+      "scores": {
+        "str": 12,
+        "dex": 16,
+        "con": 13,
+        "int": 10,
+        "wis": 16,
+        "cha": 9
+      }
+    },
+    {
+      "id": "ilya",
+      "name": "Ilya Sable",
+      "className": "Wizard",
+      "level": 3,
+      "tone": "blue",
+      "specialty": "Understands old mechanisms",
+      "scores": {
+        "str": 8,
+        "dex": 12,
+        "con": 13,
+        "int": 18,
+        "wis": 12,
+        "cha": 10
+      }
+    },
+    {
+      "id": "nyra",
+      "name": "Nyra Voss",
+      "className": "Rogue",
+      "level": 3,
+      "tone": "plum",
+      "specialty": "Finds quiet ways through",
+      "scores": {
+        "str": 9,
+        "dex": 18,
+        "con": 12,
+        "int": 13,
+        "wis": 14,
+        "cha": 12
+      }
+    },
+    {
+      "id": "osric",
+      "name": "Osric Flint",
+      "className": "Cleric",
+      "level": 3,
+      "tone": "teal",
+      "specialty": "Keeps people calm and moving",
+      "scores": {
+        "str": 13,
+        "dex": 9,
+        "con": 14,
+        "int": 10,
+        "wis": 16,
+        "cha": 14
+      }
+    },
+    {
+      "id": "tess",
+      "name": "Tess Reed",
+      "className": "Fighter",
+      "level": 1,
+      "tone": "ochre",
+      "specialty": "Handles ropes and heavy gear",
+      "prospect": true,
+      "scores": {
+        "str": 16,
+        "dex": 13,
+        "con": 14,
+        "int": 10,
+        "wis": 11,
+        "cha": 10
+      }
+    }
+  ],
+  "initialBonds": [
+    {
+      "pair": [
+        "mara",
+        "rowan"
+      ],
+      "trust": 3,
+      "history": "Held the north road through a winter storm."
+    },
+    {
+      "pair": [
+        "ilya",
+        "mara"
+      ],
+      "trust": 2,
+      "history": "Worked together at the Rookbridge locks."
+    },
+    {
+      "pair": [
+        "mara",
+        "osric"
+      ],
+      "trust": 2,
+      "history": "Escorted a relief wagon to Alderford."
+    },
+    {
+      "pair": [
+        "nyra",
+        "rowan"
+      ],
+      "trust": 1,
+      "history": "Ran a night watch on the alder road."
+    },
+    {
+      "pair": [
+        "ilya",
+        "nyra"
+      ],
+      "trust": 2,
+      "history": "Mapped the tunnels under the old mill."
+    },
+    {
+      "pair": [
+        "osric",
+        "tess"
+      ],
+      "trust": 1,
+      "history": "Practised rope rescues at the guildhall."
+    },
+    {
+      "pair": [
+        "nyra",
+        "tess"
+      ],
+      "trust": 1,
+      "history": "Trained on the south wall together."
+    }
+  ],
+  "partySize": 3,
+  "contract": {
+    "title": "The Ashford Sluice",
+    "location": "Ashford Crossing",
+    "patron": "Warden Elspeth Vale",
+    "affiliation": "Ashford Wardens",
+    "fee": 90,
+    "brief": "A grain convoy is due at Ashford by dawn. The Warden wants the west crossing secured and the relief sluice opened to draw water away from the convoy road.",
+    "report": "Families have taken shelter in the old mill below the sluice. The river is already against the mill steps. Open the gate now and their way out goes under. Wait too long and the convoy road may wash out."
+  },
+  "responses": [
+    {
+      "id": "orders",
+      "title": "Follow the Warden’s orders",
+      "focus": "Secure the road",
+      "description": "Open the sluice now. Put the third adventurer on the capstan while the Captain directs the crossing.",
+      "leadAbility": "cha",
+      "scoutAbility": "wis",
+      "supportAbility": "str",
+      "dc": 14,
+      "success": "The convoy crossed before dawn. The mill flooded, and the families escaped up the bank after losing their supplies.",
+      "failure": "The capstan jammed partway open. The mill flooded and the convoy had to turn back.",
+      "gold": [
+        90,
+        0
+      ],
+      "standing": [
+        2,
+        -1
+      ],
+      "trust": [
+        -1,
+        -2
+      ]
+    },
+    {
+      "id": "rescue",
+      "title": "Evacuate the mill first",
+      "focus": "Protect the families",
+      "description": "Keep the sluice closed while the Scout finds a way into the mill and the Captain leads the families out.",
+      "leadAbility": "cha",
+      "scoutAbility": "dex",
+      "supportAbility": "str",
+      "dc": 15,
+      "success": "Every family reached high ground. The convoy missed the dawn crossing and the Warden paid a reduced fee.",
+      "failure": "The party reached the mill, but a collapsed stair cut off the last two families. They sheltered upstairs until help arrived. The convoy turned back.",
+      "gold": [
+        45,
+        0
+      ],
+      "standing": [
+        -1,
+        -2
+      ],
+      "trust": [
+        2,
+        0
+      ]
+    },
+    {
+      "id": "split",
+      "title": "Split the party at the sluice",
+      "focus": "Attempt both objectives",
+      "description": "Send the Scout to the mill. Have the third adventurer time the gate release while the Captain holds the road.",
+      "leadAbility": "cha",
+      "scoutAbility": "wis",
+      "supportAbility": "int",
+      "dc": 18,
+      "success": "The last family cleared the bank just before the sluice opened. The convoy crossed on time.",
+      "failure": "The gate opened too late to save the road. The Scout got the families clear, but the Warden withheld payment.",
+      "gold": [
+        90,
+        0
+      ],
+      "standing": [
+        2,
+        -2
+      ],
+      "trust": [
+        2,
+        -1
+      ]
+    }
+  ]
+}
