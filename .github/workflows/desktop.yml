@@ -93,7 +93,7 @@ jobs:
           executable="$app/Contents/MacOS/Guildbound"
           test -x "$executable"
           test -f "$RUNNER_TEMP/guildbound/attribution.md"
-          lipo -verify_arch arm64 x86_64 "$executable"
+          lipo "$executable" -verify_arch arm64 x86_64
           codesign --verify --deep --strict "$app"
           "$executable" --headless --quit-after 3 2>&1 | tee "$RUNNER_TEMP/guildbound.log"
           if grep -E 'SCRIPT ERROR:|ERROR:' "$RUNNER_TEMP/guildbound.log"; then exit 1; fi
