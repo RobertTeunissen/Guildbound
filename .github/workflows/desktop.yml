@@ -1,0 +1,74 @@
+name: Desktop prototype
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  GODOT_VERSION: '4.5.1'
+
+jobs:
+  desktop:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Godot
+        run: |
+          release="https://github.com/godotengine/godot-builds/releases/download/${GODOT_VERSION}-stable"
+          archive="Godot_v${GODOT_VERSION}-stable_linux.x86_64"
+          curl --fail --retry 3 --location "$release/$archive.zip" -o "$RUNNER_TEMP/godot.zip"
+          unzip -q "$RUNNER_TEMP/godot.zip" -d "$RUNNER_TEMP"
+          install -m 755 "$RUNNER_TEMP/$archive" "$RUNNER_TEMP/godot"
+          echo "$RUNNER_TEMP" >> "$GITHUB_PATH"
+      - name: Import project and test
+        shell: bash
+        run: |
+          godot --headless --editor --import 2>&1 | tee "$RUNNER_TEMP/import.log"
+          if grep -E 'SCRIPT ERROR:|ERROR:' "$RUNNER_TEMP/import.log"; then exit 1; fi
+          godot --headless --script res://test/expedition_test.gd 2>&1 | tee "$RUNNER_TEMP/tests.log"
+          if grep -E 'SCRIPT ERROR:|ERROR:' "$RUNNER_TEMP/tests.log"; then exit 1; fi
+          godot --headless --quit-after 3 2>&1 | tee "$RUNNER_TEMP/launch.log"
+          if grep -E 'SCRIPT ERROR:|ERROR:' "$RUNNER_TEMP/launch.log"; then exit 1; fi
+      - name: Install desktop export templates
+        run: |
+          release="https://github.com/godotengine/godot-builds/releases/download/${GODOT_VERSION}-stable"
+          curl --fail --retry 3 --location "$release/Godot_v${GODOT_VERSION}-stable_export_templates.tpz" -o "$RUNNER_TEMP/templates.tpz"
+          unzip -q "$RUNNER_TEMP/templates.tpz" -d "$RUNNER_TEMP"
+          mkdir -p "$HOME/.local/share/godot/export_templates"
+          mv "$RUNNER_TEMP/templates" "$HOME/.local/share/godot/export_templates/${GODOT_VERSION}.stable"
+      - name: Export desktop builds
+        run: |
+          mkdir -p build/{macos,linux,windows}
+          godot --headless --export-release macOS build/macos/Guildbound.zip
+          godot --headless --export-release Linux build/linux/Guildbound.x86_64
+          godot --headless --export-release Windows build/windows/Guildbound.exe
+          test -s build/macos/Guildbound.zip
+          test -x build/linux/Guildbound.x86_64
+          test -s build/windows/Guildbound.exe
+          build/linux/Guildbound.x86_64 --headless --quit-after 3
+          cp docs/attribution.md build/macos/
+          cp docs/attribution.md build/linux/
+          cp docs/attribution.md build/windows/
+          tar -czf build/Guildbound-Linux.tar.gz -C build/linux .
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Guildbound-macOS
+          path: build/macos/
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Guildbound-Linux
+          path: build/Guildbound-Linux.tar.gz
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Guildbound-Windows
+          path: build/windows/
+          if-no-files-found: error
