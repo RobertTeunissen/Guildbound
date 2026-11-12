@@ -1,0 +1,54 @@
+{
+  "region": "The Alder Vale",
+  "setting": "Alderford is a small river town where the Alder Company keeps its guildhall. Barges, millers and grain convoys depend on the alder roads and the old network of locks. The wardens patrol the roads, but isolated settlements hire adventurers when they run out of hands. The Copper Lanterns and the Briar Company take the same local work. Low magic is familiar; old machinery and ruins still surprise people.",
+  "sites": [
+    {
+      "id": "north_road", "name": "North Road", "map": [0.31, 0.19], "travel": 2,
+      "patron": "Captain Nessa Bracken", "affiliation": "Alder Road Watch",
+      "lore": "A steep road through pine woods and broken shale, used by carters crossing the northern ridge.",
+      "jobs": [
+        ["The Missing Post Rider", "Find a rider overdue from the ridge station and bring back the dispatch pouch."],
+        ["The Shale Cut", "Reopen a blocked stretch of road before the next timber wagons arrive."],
+        ["The Empty Watchtower", "Find out why the ridge watch has stopped lighting its signal fire."],
+        ["The Broken Waymark", "Find the night convoy after someone turned the waymarks towards an abandoned quarry."]
+      ],
+      "complications": ["The only safe way past the shale can carry one person at a time.", "Fog has settled in the cut and the old trail is giving way.", "Carters are already gathering above the damaged path, and the weather is closing in.", "Fresh tracks point to a timber shelter off the main road, where a light is still burning."]
+    },
+    {
+      "id": "rookbridge", "name": "Rookbridge", "map": [0.75, 0.29], "travel": 2,
+      "patron": "Lockkeeper Bram Holt", "affiliation": "Rookbridge Lock Guild",
+      "lore": "A stone bridge and stepped canal locks. Barges queue at the toll house beneath abandoned winch galleries.",
+      "jobs": [
+        ["The Jammed Lock", "Find out why the lower lock will not close while loaded barges are waiting upstream."],
+        ["The Tollhouse Ledger", "Recover a missing toll ledger before the bargemasters are charged for the same cargo twice."],
+        ["The Flooded Gallery", "Reach the old winch gallery and recover the spare gears stored there."],
+        ["The Unmoored Barge", "Recover a supply barge that slipped its ropes and lodged against the weir."]
+      ],
+      "complications": ["The towpath has washed out and the lock crew can only help from the far bank.", "Two lock crews are giving conflicting accounts of what happened.", "A lower passage is still open, but the next scheduled water release will cut it off.", "Someone has strung fresh signal bells across the only dry approach."]
+    },
+    {
+      "id": "ashford", "name": "Ashford Crossing", "map": [0.66, 0.66], "travel": 1,
+      "patron": "Warden Elspeth Vale", "affiliation": "Ashford Wardens",
+      "lore": "A low crossing, relief sluice and old mill, surrounded by fields that flood when the Alder rises.",
+      "jobs": [
+        ["The East Bank Ferry", "Restore the foot ferry so the east-bank households can reach market."],
+        ["The Sluice Survey", "Check the old flood marks and report whether the west road can carry the next grain convoy."],
+        ["The Drowned Orchard", "Retrieve the seed stock left in the orchard store before the bank gives way."],
+        ["The Miller’s Bell", "Find who has been ringing the abandoned mill bell each evening and what they need."]
+      ],
+      "complications": ["The old causeway is still visible, but water is running through a break in its middle.", "Someone moved the survey flags during the night and the river is rising again.", "The strongest current is now running through a channel that the warden’s map shows as dry.", "Villagers have gathered on the bank and disagree over which crossing can still be used."]
+    },
+    {
+      "id": "south_wall", "name": "South Wall", "map": [0.24, 0.72], "travel": 1,
+      "patron": "Sister Anwen Reed", "affiliation": "Alderford Relief House",
+      "lore": "The outer earthworks of Alderford, beyond its occupied streets. Relief stores and abandoned guard tunnels share the hillside.",
+      "jobs": [
+        ["The Relief Stores", "Find why sacks keep disappearing from a locked relief store below the wall."],
+        ["The South Wall Sinkhole", "Survey the void beneath the new sinkhole and find out whether it reaches the occupied houses."],
+        ["The Buried Cistern", "Recover the relief house’s tools from a cistern that opened after the last rain."],
+        ["The Night Signal", "Trace a lamp signal coming from the old guard tunnels after dark."]
+      ],
+      "complications": ["The tunnel mouth has slumped and the lintel shifts when weight crosses it.", "The only witness is a frightened apprentice who refuses to return to the wall.", "An old guard plan shows a second entrance that the relief workers have never used.", "A relief wagon is blocking the narrow approach and cannot be moved safely without a second route."]
+    }
+  ]
+}

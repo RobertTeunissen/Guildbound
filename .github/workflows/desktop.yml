@@ -34,7 +34,7 @@ jobs:
           if grep -E 'SCRIPT ERROR:|ERROR:' "$RUNNER_TEMP/import.log"; then exit 1; fi
           godot --headless --script res://test/expedition_test.gd 2>&1 | tee "$RUNNER_TEMP/tests.log"
           if grep -E 'SCRIPT ERROR:|ERROR:' "$RUNNER_TEMP/tests.log"; then exit 1; fi
-          godot --headless --quit-after 3 2>&1 | tee "$RUNNER_TEMP/launch.log"
+          godot --headless --quit-after 3 -- --no-local-ai 2>&1 | tee "$RUNNER_TEMP/launch.log"
           if grep -E 'SCRIPT ERROR:|ERROR:' "$RUNNER_TEMP/launch.log"; then exit 1; fi
       - name: Install desktop export templates
         run: |
@@ -52,7 +52,7 @@ jobs:
           test -s build/macos/Guildbound.zip
           test -x build/linux/Guildbound.x86_64
           test -s build/windows/Guildbound.exe
-          build/linux/Guildbound.x86_64 --headless --quit-after 3
+          build/linux/Guildbound.x86_64 --headless --quit-after 3 -- --no-local-ai
           zip -j build/macos/Guildbound.zip docs/attribution.md
           mv build/macos/Guildbound.zip build/macos/Guildbound-macOS.zip
           cp docs/attribution.md build/linux/
@@ -95,5 +95,5 @@ jobs:
           test -f "$RUNNER_TEMP/guildbound/attribution.md"
           lipo "$executable" -verify_arch arm64 x86_64
           codesign --verify --deep --strict "$app"
-          "$executable" --headless --quit-after 3 2>&1 | tee "$RUNNER_TEMP/guildbound.log"
+          "$executable" --headless --quit-after 3 -- --no-local-ai 2>&1 | tee "$RUNNER_TEMP/guildbound.log"
           if grep -E 'SCRIPT ERROR:|ERROR:' "$RUNNER_TEMP/guildbound.log"; then exit 1; fi

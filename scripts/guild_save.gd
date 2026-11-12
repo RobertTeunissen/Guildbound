@@ -7,9 +7,7 @@ const PATH := "user://alder-company.cfg"
 static func read(rules: Expedition, path: String = PATH) -> Dictionary:
 	var config := ConfigFile.new()
 	if config.load(path) == OK:
-		var saved: Variant = config.get_value("guild", "state", null)
-		if rules.valid_state(saved):
-			return saved
+		return rules.restore(config.get_value("guild", "state", null))
 	return rules.fresh()
 
 
